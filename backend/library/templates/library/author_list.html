@@ -1,0 +1,33 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Авторы - Онлайн Библиотека{% endblock %}
+
+{% block content %}
+<h1>Авторы</h1>
+
+<div class="row">
+    {% for author in authors %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ author.name }}</h5>
+                {% if author.birth_date %}
+                    <p class="card-text text-muted">Родился: {{ author.birth_date|date:"d.m.Y" }}</p>
+                {% endif %}
+                {% if author.biography %}
+                    <p class="card-text">{{ author.biography|truncatewords:30 }}</p>
+                {% endif %}
+                <a href="{% url 'author_detail' author.id %}" class="btn btn-primary">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4>Авторы не найдены</h4>
+            <p>В библиотеке пока нет авторов. Добавьте авторов через админ-панель.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

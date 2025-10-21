@@ -1,0 +1,91 @@
+{% extends 'library/base.html' %}
+
+{% block title %}{{ book.title }} - Онлайн Библиотека{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" class="img-fluid rounded" alt="{{ book.title }}">
+        {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                <span class="text-muted fs-1">📖</span>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h1>{{ book.title }}</h1>
+        <p class="lead">
+            <strong>Автор:</strong> 
+            <a href="{% url 'author_detail' book.author.id %}">{{ book.author.name }}</a>
+        </p>
+        
+        {% if book.genre %}
+            <p><strong>Жанр:</strong> 
+                <a href="{% url 'genre_detail' book.genre.id %}">{{ book.genre.name }}</a>
+            </p>
+        {% endif %}
+        
+        {% if book.publication_date %}
+            <p><strong>Год издания:</strong> {{ book.publication_date.year }}</p>
+        {% endif %}
+        
+        {% if book.isbn %}
+            <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+        {% endif %}
+        
+        {% if book.pages %}
+            <p><strong>Количество страниц:</strong> {{ book.pages }}</p>
+        {% endif %}
+        
+        {% if book.description %}
+            <div class="mt-3">
+                <h4>Описание</h4>
+                <p>{{ book.description }}</p>
+            </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            {% if user.is_authenticated %}
+                <a href="{% url 'add_review' book.id %}" class="btn btn-success">Добавить отзыв</a>
+            {% else %}
+                <p class="text-muted">Войдите в систему, чтобы добавить отзыв</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if reviews %}
+<div class="mt-5">
+    <h3>Отзывы читателей</h3>
+    {% for review in reviews %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <h6 class="card-title">{{ review.user.username }}</h6>
+                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            <div class="mb-2">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                        <span class="text-warning">★</span>
+                    {% else %}
+                        <span class="text-muted">★</span>
+                    {% endif %}
+                {% endfor %}
+                <span class="ms-2">{{ review.rating }}/5</span>
+            </div>
+            <p class="card-text">{{ review.comment }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="mt-5">
+    <div class="alert alert-info">
+        <h4>Пока нет отзывов</h4>
+        <p>Станьте первым, кто оставит отзыв об этой книге!</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

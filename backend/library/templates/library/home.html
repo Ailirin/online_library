@@ -1,0 +1,74 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Главная - Онлайн Библиотека{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+    <h1 class="display-4">Добро пожаловать в Онлайн Библиотеку!</h1>
+    <p class="lead">Откройте для себя мир книг, авторов и жанров. Читайте отзывы и делитесь своими впечатлениями.</p>
+    <hr class="my-4">
+    <p>Исследуйте нашу коллекцию книг и найдите свое следующее любимое произведение.</p>
+    <a class="btn btn-light btn-lg" href="{% url 'book_list' %}" role="button">Начать просмотр</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📚 Книги</h5>
+                <p class="card-text">Просматривайте нашу коллекцию книг различных жанров и авторов.</p>
+                <a href="{% url 'book_list' %}" class="btn btn-primary">Смотреть книги</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">✍️ Авторы</h5>
+                <p class="card-text">Узнайте больше о ваших любимых авторах и их произведениях.</p>
+                <a href="{% url 'author_list' %}" class="btn btn-primary">Смотреть авторов</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">🏷️ Жанры</h5>
+                <p class="card-text">Исследуйте книги по жанрам и найдите то, что вам по душе.</p>
+                <a href="{% url 'genre_list' %}" class="btn btn-primary">Смотреть жанры</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if latest_books %}
+<div class="mt-5">
+    <h2>Последние добавленные книги</h2>
+    <div class="row">
+        {% for book in latest_books %}
+        <div class="col-md-4 mb-3">
+            <div class="card book-card h-100">
+                {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">📖</span>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text">
+                        <strong>Автор:</strong> {{ book.author.name }}<br>
+                        {% if book.genre %}
+                            <strong>Жанр:</strong> {{ book.genre.name }}
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'book_detail' book.id %}" class="btn btn-outline-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

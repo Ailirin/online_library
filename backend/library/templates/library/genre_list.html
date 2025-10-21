@@ -1,0 +1,30 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Жанры - Онлайн Библиотека{% endblock %}
+
+{% block content %}
+<h1>Жанры</h1>
+
+<div class="row">
+    {% for genre in genres %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ genre.name }}</h5>
+                {% if genre.description %}
+                    <p class="card-text">{{ genre.description|truncatewords:20 }}</p>
+                {% endif %}
+                <a href="{% url 'genre_detail' genre.id %}" class="btn btn-primary">Смотреть книги</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4>Жанры не найдены</h4>
+            <p>В библиотеке пока нет жанров. Добавьте жанры через админ-панель.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

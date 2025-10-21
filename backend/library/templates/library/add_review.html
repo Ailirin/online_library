@@ -1,0 +1,63 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Добавить отзыв - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Добавить отзыв к книге "{{ book.title }}"</h2>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        {% if book.cover_image %}
+                            <img src="{{ book.cover_image.url }}" class="img-fluid rounded" alt="{{ book.title }}">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 150px;">
+                                <span class="text-muted fs-3">📖</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h5>{{ book.title }}</h5>
+                        <p class="text-muted">Автор: {{ book.author.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.rating.id_for_label }}" class="form-label">Рейтинг</label>
+                {{ form.rating }}
+                {% if form.rating.errors %}
+                    <div class="text-danger">
+                        {% for error in form.rating.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.comment.id_for_label }}" class="form-label">Ваш отзыв</label>
+                {{ form.comment }}
+                {% if form.comment.errors %}
+                    <div class="text-danger">
+                        {% for error in form.comment.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'book_detail' book.id %}" class="btn btn-secondary me-md-2">Отмена</a>
+                <button type="submit" class="btn btn-success">Добавить отзыв</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
