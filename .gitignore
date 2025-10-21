@@ -164,7 +164,21 @@ frontend/.next/
 frontend/out/
 
 # Environment variables
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Database
+*.db
+*.sqlite3
+*.sqlite3-journal
+
+# PostgreSQL
+postgres_data/
+pgadmin_data/
