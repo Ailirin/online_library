@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': config('DB_NAME', default='online_library'),
         'USER': config('DB_USER', default='library_user'),
         'PASSWORD': config('DB_PASSWORD', default='library_password'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
         'PORT': config('DB_PORT', default='5432'),
     }
 }
