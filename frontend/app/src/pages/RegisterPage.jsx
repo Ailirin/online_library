@@ -31,25 +31,9 @@ function RegisterPage() {
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       }}
     >
-      {/* Фоновое изображение */}
-      <img
-        src={bgImage}
-        alt="background"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'cover',
-          zIndex: -1,
-          opacity: 0.92,
-        }}
-        draggable={false}
-        crossOrigin="anonymous"
-      />
       {/* Карточка с размытием */}
       <div
         style={{

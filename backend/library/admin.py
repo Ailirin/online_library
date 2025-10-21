@@ -3,24 +3,23 @@ from .models import Author, Genre, Book, Review
 
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
-    list_display = ['name', 'birth_date']
-    list_filter = ['birth_date']
-    search_fields = ['name']
+    list_display = ['name', 'birth_year', 'nationality']
+    list_filter = ['nationality', 'birth_year']
+    search_fields = ['name', 'biography']
     ordering = ['name']
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    list_display = ['name']
-    search_fields = ['name']
+    list_display = ['name', 'description']
+    search_fields = ['name', 'description']
     ordering = ['name']
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'genre', 'publication_date', 'created_at']
-    list_filter = ['genre', 'publication_date', 'created_at']
-    search_fields = ['title', 'author__name', 'isbn']
+    list_display = ['title', 'author', 'genre', 'publication_year', 'isbn']
+    list_filter = ['genre', 'publication_year', 'author']
+    search_fields = ['title', 'author__name', 'isbn', 'description']
     ordering = ['title']
-    date_hierarchy = 'publication_date'
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

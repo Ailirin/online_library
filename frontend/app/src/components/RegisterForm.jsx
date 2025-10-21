@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 function RegisterForm() {
   // Переменные состояния для полей формы

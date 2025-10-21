@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 const AdminSettingsPage = () => {
   const [settings, setSettings] = useState([]);

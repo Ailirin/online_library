@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 function BookDetail() {
   const { id } = useParams();
@@ -21,9 +21,10 @@ function BookDetail() {
     setExternalError('');
     setExternalFile(null);
     try {
-      const res = await axios.get(`http://localhost:8000/api/find_openlibrary_file/?title=${encodeURIComponent(book.title)}`);
-      if (res.data.file_url) {
-        setExternalFile(res.data.file_url);
+      const data = await apiService.findOpenLibraryFile(book.title);
+      if (data && data.length > 0) {
+        // Берем первую найденную книгу
+        setExternalFile(data[0].url);
       } else {
         setExternalError('Файл не найден в Open Library');
       }

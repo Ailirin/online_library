@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
+import apiService from '../services/api';
 
 function OpenLibrarySearch({ onClose }) {
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = () => {
-    fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&language=rus`)
-      .then(response => response.json())
-      .then(data => {
-        setBooks(data.docs || []);
-      })
-      .catch(error => {
-        console.error('Ошибка при поиске:', error);
-      });
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    
+    setLoading(true);
+    try {
+      const data = await apiService.searchOpenLibraryBooks(query);
+      setBooks(data || []);
+    } catch (error) {
+      console.error('Ошибка при поиске:', error);
+      setBooks([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,13 +39,38 @@ function OpenLibrarySearch({ onClose }) {
         ← Вернуться к каталогу
       </button>
       <h2>Поиск книг на OpenLibrary</h2>
-      <input
-        type="text"
-        placeholder="Введите название книги"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <button onClick={handleSearch}>Поиск</button>
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="text"
+          placeholder="Введите название книги"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          style={{
+            padding: '8px 12px',
+            border: '1px solid #d9d9d9',
+            borderRadius: 6,
+            marginRight: 10,
+            width: 300,
+            fontSize: 16
+          }}
+        />
+        <button 
+          onClick={handleSearch}
+          disabled={loading}
+          style={{
+            padding: '8px 16px',
+            background: loading ? '#ccc' : 'linear-gradient(90deg, #1890ff 0%, #40a9ff 100%)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: 16
+          }}
+        >
+          {loading ? 'Поиск...' : 'Поиск'}
+        </button>
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 24 }}>
         {books.map((book, idx) => (
           <div key={idx} style={{
@@ -51,9 +82,9 @@ function OpenLibrarySearch({ onClose }) {
             background: '#fff',
             textAlign: 'center'
           }}>
-            {book.cover_i ? (
+            {book.cover_id ? (
               <img
-                src={`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`}
+                src={`https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`}
                 alt={book.title}
                 style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 6, marginBottom: 10 }}
               />
@@ -74,13 +105,13 @@ function OpenLibrarySearch({ onClose }) {
             )}
             <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 6 }}>{book.title}</div>
             <div style={{ color: '#555', marginBottom: 4 }}>
-              {book.author_name ? book.author_name.join(', ') : 'Автор неизвестен'}
+              {book.author || 'Автор неизвестен'}
             </div>
             <div style={{ color: '#888', fontSize: 14 }}>
-              {book.first_publish_year || 'Год неизвестен'}
+              {book.year || 'Год неизвестен'}
             </div>
             <a
-              href={`https://openlibrary.org${book.key}`}
+              href={book.url}
               target="_blank"
               rel="noopener noreferrer"
               style={{

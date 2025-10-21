@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col } from 'antd';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 function AdminDashboardPage() {
   const [stats, setStats] = useState({ books: 0, users: 0 });

@@ -1,5 +1,5 @@
 // API сервис для интеграции с Django REST Framework
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 
 class ApiService {
   constructor() {
@@ -17,6 +17,7 @@ class ApiService {
   clearToken() {
     this.token = null;
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
   }
 
   // Получить заголовки для запросов
@@ -26,7 +27,7 @@ class ApiService {
     };
 
     if (this.token) {
-      headers['Authorization'] = `Token ${this.token}`;
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
 
     return headers;
@@ -44,6 +45,26 @@ class ApiService {
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        // Если токен истек, попробуем обновить его
+        if (response.status === 401 && this.token && endpoint !== '/auth/token/' && endpoint !== '/auth/token/refresh/') {
+          try {
+            await this.refreshToken();
+            // Повторяем запрос с новым токеном
+            const newConfig = {
+              ...config,
+              headers: this.getHeaders(),
+            };
+            const retryResponse = await fetch(url, newConfig);
+            if (retryResponse.ok) {
+              return await retryResponse.json();
+            }
+          } catch (refreshError) {
+            // Если не удалось обновить токен, очищаем его
+            this.clearToken();
+            throw new Error('Session expired. Please login again.');
+          }
+        }
+        
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
@@ -64,7 +85,33 @@ class ApiService {
       body: JSON.stringify({ username, password }),
     });
     
-    this.setToken(response.token);
+    // JWT токены возвращаются в формате { access: "...", refresh: "..." }
+    if (response.access) {
+      this.setToken(response.access);
+      // Сохраняем refresh токен для обновления
+      localStorage.setItem('refresh_token', response.refresh);
+    }
+    return response;
+  }
+
+  // Обновить токен
+  async refreshToken() {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await this.request('/auth/token/refresh/', {
+      method: 'POST',
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+
+    if (response.access) {
+      this.setToken(response.access);
+      if (response.refresh) {
+        localStorage.setItem('refresh_token', response.refresh);
+      }
+    }
     return response;
   }
 
@@ -176,6 +223,18 @@ class ApiService {
   // Мои отзывы
   async getMyReviews() {
     return await this.request('/reviews/my_reviews/');
+  }
+
+  // === OPENLIBRARY ===
+  
+  // Поиск книг в OpenLibrary
+  async searchOpenLibraryBooks(title) {
+    return await this.request(`/find_openlibrary_books/?title=${encodeURIComponent(title)}`);
+  }
+
+  // Поиск файла книги в OpenLibrary
+  async findOpenLibraryFile(title) {
+    return await this.request(`/find_openlibrary_file/?title=${encodeURIComponent(title)}`);
   }
 }
 

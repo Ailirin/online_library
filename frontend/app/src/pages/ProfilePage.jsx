@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Spin } from 'antd';
 import axios from 'axios';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 // Компонент страницы профиля
 const ProfilePage = () => {

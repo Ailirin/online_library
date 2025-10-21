@@ -13,7 +13,7 @@ function LoginPage() {
     try {
       await actions.login(values.username, values.password);
       message.success('Вход выполнен успешно!');
-      navigate('/books');
+      navigate('/catalog');
     } catch (error) {
       message.error('Неверный логин или пароль');
     } finally {
@@ -31,7 +31,7 @@ function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
-        backgroundImage: `url(${backgroundUrl})`,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

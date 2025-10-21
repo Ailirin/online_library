@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Popconfirm, Tag, message, Modal, Form, Input, Checkbox } from 'antd';
-import axiosInstance from '../api/axiosInstance';
+import apiService from '../services/api';
 
 function AdminUsersPage() {
   const [users, setUsers] = useState([]);
