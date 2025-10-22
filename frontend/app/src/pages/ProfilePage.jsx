@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Spin } from 'antd';
-import axios from 'axios';
 import apiService from '../services/api';
 
-// Компонент страницы профиля
 const ProfilePage = () => {
-  // Состояния для пользователя и загрузки
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Загрузка данных пользователя при монтировании
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('access');
-        const response = await axios.get('http://localhost:8000/api/profile/', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiService.request('/profile/');
         setUser({
-          name: response.data.username,
+          name: response.username,
+          email: response.email,
           roles: [
-            response.data.is_superuser ? 'admin' : null,
+            response.is_superuser ? 'admin' : null,
             'user'
           ].filter(Boolean)
         });
@@ -33,7 +27,6 @@ const ProfilePage = () => {
     fetchProfile();
   }, []);
 
-  // Функция для проверки роли
   const hasRole = (role) => user && user.roles.includes(role);
 
   if (loading) {
@@ -48,6 +41,7 @@ const ProfilePage = () => {
     <div>
       <h1>Страница профиля</h1>
       <p>Добро пожаловать, {user.name}!</p>
+      <p>Email: {user.email}</p>
 
       {hasRole('admin') && (
         <div>

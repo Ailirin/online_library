@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, App } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 function RegisterPage() {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { actions } = useApp();
@@ -53,13 +54,14 @@ function RegisterPage() {
           onFinish={onFinish}
           layout="vertical"
           style={{ marginTop: 24 }}
+          autoComplete="on"
         >
           <Form.Item
             label="Имя пользователя"
             name="username"
             rules={[{ required: true, message: 'Введите имя пользователя!' }]}
           >
-            <Input />
+            <Input autoComplete="username" />
           </Form.Item>
           <Form.Item
             label="Email"
@@ -69,14 +71,14 @@ function RegisterPage() {
               { required: true, message: 'Введите email!' }
             ]}
           >
-            <Input />
+            <Input autoComplete="email" />
           </Form.Item>
           <Form.Item
             label="Пароль"
             name="password"
             rules={[{ required: true, message: 'Введите пароль!' }]}
           >
-            <Input.Password />
+            <Input.Password autoComplete="new-password" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading}>

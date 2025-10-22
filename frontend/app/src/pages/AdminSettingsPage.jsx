@@ -6,9 +6,9 @@ const AdminSettingsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axiosInstance.get('/settings/')
+    apiService.getSettings()
       .then(res => {
-        setSettings(res.data);
+        setSettings(res.results || res); // если пагинация
         setLoading(false);
       });
   }, []);
@@ -18,8 +18,8 @@ const AdminSettingsPage = () => {
   };
 
   const handleSave = (id, value) => {
-  axiosInstance.patch(`/settings/${id}/`, { value })
-    .then(() => {
+    apiService.updateSetting(id, { value })
+      .then(() => {
         // Можно добавить уведомление об успехе
       });
   };

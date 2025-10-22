@@ -7,9 +7,16 @@ function AdminDashboardPage() {
 
   useEffect(() => {
     async function fetchStats() {
-      const booksRes = await axiosInstance.get('books/');
-      const usersRes = await axiosInstance.get('users/');
-      setStats({ books: booksRes.data.length, users: usersRes.data.length });
+      try {
+        const booksRes = await apiService.getBooks();
+        const usersRes = await apiService.getUsers ? await apiService.getUsers() : { results: [] };
+        setStats({
+          books: (booksRes.results || booksRes).length,
+          users: (usersRes.results || usersRes).length,
+        });
+      } catch (e) {
+        setStats({ books: 0, users: 0 });
+      }
     }
     fetchStats();
   }, []);

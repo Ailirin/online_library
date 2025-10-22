@@ -10,55 +10,43 @@ function AdminBooksPage() {
   const [deleteBookId, setDeleteBookId] = useState(null);
   const [searchValue, setSearchValue] = useState('');
 
-  // Получаем список книг для автодополнения
-  useEffect(() => {
-    async function fetchBooks() {
-      try {
-        const res = await axiosInstance.get('books/');
-        setBooks(res.data);
-      } catch (e) {
-        // Не показываем ошибку, если книг нет
-      }
-    }
-    fetchBooks();
-  }, []);
 
-  const handleAddBook = () => {
-    setIsModalOpen(true);
-    form.resetFields();
-  };
-
-  const handleModalOk = async () => {
+// Получение книг при монтировании
+useEffect(() => {
+  async function fetchBooks() {
     try {
-      const values = await form.validateFields();
-      if (/^\d{4}$/.test(values.published_date)) {
-        values.published_date = `${values.published_date}-01-01`;
-      }
-      await axiosInstance.post('books/', values);
-      message.success('Книга добавлена');
-      setIsModalOpen(false);
+      const res = await apiService.getBooks();
+      setBooks(res.results || res); // если API возвращает пагинацию
     } catch (e) {
-      message.error('Ошибка при добавлении книги');
+      // Можно добавить обработку ошибки
     }
-  };
+  }
+  fetchBooks();
+}, []);
 
-  const handleDeleteBook = async () => {
-    if (!deleteBookId) {
-      message.warning('Выберите книгу для удаления');
-      return;
+// Открытие модального окна для добавления книги
+const handleAddBook = () => {
+  setIsModalOpen(true);
+  form.resetFields();
+};
+
+// После успешного добавления книги обновляй список:
+const handleModalOk = async () => {
+  try {
+    const values = await form.validateFields();
+    if (/^\\d{4}$/.test(values.published_date)) {
+      values.published_date = `${values.published_date}-01-01`;
     }
-    try {
-      await axiosInstance.delete(`books/${deleteBookId}/`);
-      message.success('Книга удалена');
-      setDeleteBookId(null);
-      setSearchValue('');
-      // Обновить список книг после удаления
-      const res = await axiosInstance.get('books/');
-      setBooks(res.data);
-    } catch (e) {
-      message.error('Ошибка при удалении книги');
-    }
-  };
+    await apiService.createBook(values);
+    message.success('Книга добавлена');
+    setIsModalOpen(false);
+    // Обновить список книг
+    const res = await apiService.getBooks();
+    setBooks(res.results || res);
+  } catch (e) {
+    message.error('Ошибка при добавлении книги');
+  }
+};
 
   // Для автодополнения
   const options = books.map(book => ({

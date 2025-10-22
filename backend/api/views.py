@@ -49,6 +49,11 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
             return BookDetailSerializer
         return BookSerializer
     
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
     @action(detail=False, methods=['get'])
     def popular(self, request):
         """Популярные книги (по количеству отзывов)"""

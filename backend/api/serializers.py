@@ -34,12 +34,15 @@ class BookSerializer(serializers.ModelSerializer):
     genre_name = serializers.CharField(source='genre.name', read_only=True)
     average_rating = serializers.SerializerMethodField()
     reviews_count = serializers.SerializerMethodField()
+    cover_image_url = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'author', 'author_name', 'genre', 'genre_name',
-            'publication_year', 'isbn', 'description', 'cover_image',
+            'publication_year', 'isbn', 'description', 'cover_image', 'file',
+            'cover_image_url', 'file_url',
             'average_rating', 'reviews_count'
         ]
         read_only_fields = ['id']
@@ -52,6 +55,20 @@ class BookSerializer(serializers.ModelSerializer):
     
     def get_reviews_count(self, obj):
         return obj.reviews.count()
+
+    def get_cover_image_url(self, obj):
+        if not obj.cover_image:
+            return None
+        request = self.context.get('request')
+        url = obj.cover_image.url
+        return request.build_absolute_uri(url) if request else url
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        request = self.context.get('request')
+        url = obj.file.url
+        return request.build_absolute_uri(url) if request else url
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,88 +1,90 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import apiService from '../services/api';
 
 function RegisterForm() {
-  // Переменные состояния для полей формы
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState({});
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
-  // Обработка отправки формы
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Предотвращение перезагрузки страницы
-    const newErrors = {}; // Объект для хранения ошибок
-
-    // Простая проверка валидности данных
-    if (!name.trim()) newErrors.name = 'Требуется ввести имя';
-    if (!email.trim()) newErrors.email = 'Требуется ввести email';
-    if (!password) newErrors.password = 'Требуется ввести пароль';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Пароли не совпадают';
-
-    // Если есть ошибки, показываем их
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-    } else {
-      // Иначе — можно продолжить регистрацию
-      alert('Регистрация прошла успешно!');
-      // Очистка формы
-      setName('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setErrors({});
+  const onFinish = async (values) => {
+    if (values.password !== values.confirmPassword) {
+      message.error('Пароли не совпадают');
+      return;
+    }
+    try {
+      await axios.post('http://localhost:8000/api/auth/register/', {
+        username: values.name,
+        email: values.email,
+        password: values.password,
+      });
+      message.success('Регистрация прошла успешно!');
+      navigate('/login');
+    } catch (error) {
+      if (error.response?.data?.error) {
+        message.error(error.response.data.error);
+      } else {
+        message.error('Ошибка регистрации');
+      }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={onFinish}
+      style={{ maxWidth: 400, margin: '0 auto' }}
+    >
       <h2>Регистрация</h2>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Имя:</label><br />
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-        {errors.name && <div style={{ color: 'red' }}>{errors.name}</div>}
-      </div>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Email:</label><br />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-        {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
-      </div>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Пароль:</label><br />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-        {errors.password && <div style={{ color: 'red' }}>{errors.password}</div>}
-      </div>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Подтверждение пароля:</label><br />
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-        {errors.confirmPassword && <div style={{ color: 'red' }}>{errors.confirmPassword}</div>}
-      </div>
-      <button type="submit" style={{ padding: '10px 20px' }}>Зарегистрироваться</button>
-    </form>
+      <Form.Item
+        label="Имя"
+        name="name"
+        rules={[{ required: true, message: 'Требуется ввести имя' }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Email"
+        name="email"
+        rules={[
+          { required: true, message: 'Требуется ввести email' },
+          { type: 'email', message: 'Некорректный email' }
+        ]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Пароль"
+        name="password"
+        rules={[{ required: true, message: 'Требуется ввести пароль' }]}
+      >
+        <Input.Password />
+      </Form.Item>
+      <Form.Item
+        label="Подтверждение пароля"
+        name="confirmPassword"
+        dependencies={['password']}
+        rules={[
+          { required: true, message: 'Подтвердите пароль' },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue('password') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error('Пароли не совпадают'));
+            },
+          }),
+        ]}
+      >
+        <Input.Password />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit" block>
+          Зарегистрироваться
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }
 

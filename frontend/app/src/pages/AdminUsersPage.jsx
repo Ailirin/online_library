@@ -11,8 +11,8 @@ function AdminUsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get('users/');
-      setUsers(res.data);
+      const res = await apiService.getUsers();
+      setUsers(res.results || res);
     } catch (e) {
       message.error('Ошибка загрузки пользователей');
     }
@@ -23,7 +23,7 @@ function AdminUsersPage() {
 
   const handleBlock = async (id, isActive) => {
     try {
-      await axiosInstance.put(`users/${id}/`, { is_active: !isActive });
+      await apiService.updateUser(id, { is_active: !isActive });
       message.success(isActive ? 'Пользователь заблокирован' : 'Пользователь разблокирован');
       fetchUsers();
     } catch (e) {
@@ -33,7 +33,7 @@ function AdminUsersPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axiosInstance.delete(`users/${id}/`);
+      await apiService.deleteUser(id);
       message.success('Пользователь удалён');
       fetchUsers();
     } catch (e) {
@@ -49,7 +49,7 @@ function AdminUsersPage() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      await axiosInstance.post('users/', values);
+      await apiService.createUser(values);
       message.success('Пользователь добавлен');
       setIsModalOpen(false);
       fetchUsers();

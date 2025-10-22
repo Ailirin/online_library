@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Link } from 'react-router-dom';
+import apiService from '../services/api';
 import OpenLibrarySearch from '../components/OpenLibrarySearch';
 import BookModal from '../components/BookModal';
 import { useNavigate } from 'react-router-dom';
@@ -11,13 +12,13 @@ function CatalogPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/books/')
-      .then(res => setBooks(res.data))
-      .catch(err => {
-        setBooks([]);
-        console.error(err);
-      });
-  }, []);
+  apiService.getBooks()
+    .then(res => setBooks(res.results || res))
+    .catch(err => {
+      setBooks([]);
+      console.error(err);
+    });
+}, []);
 
   return (
     <div>
@@ -73,10 +74,10 @@ function CatalogPage() {
               cursor: 'pointer'
             }}
           >
-            {book.cover ? (
-              <img src={book.cover} alt={book.title} style={{ width: '100%', borderRadius: 8, marginBottom: 8 }} />
-            ) : book.cover_url ? (
-              <img src={book.cover_url} alt={book.title} style={{ width: '100%', borderRadius: 8, marginBottom: 8 }} />
+            {book.cover_image_url ? (
+              <img src={book.cover_image_url} alt={book.title} style={{ width: '100%', borderRadius: 8, marginBottom: 8 }} />
+            ) : book.cover_image ? (
+              <img src={book.cover_image} alt={book.title} style={{ width: '100%', borderRadius: 8, marginBottom: 8 }} />
             ) : (
               <div style={{
                 width: '100%',
@@ -93,24 +94,26 @@ function CatalogPage() {
               </div>
             )}
             <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 6 }}>{book.title}</div>
-            <div style={{ color: '#555', marginBottom: 4 }}>{book.author || 'Автор неизвестен'}</div>
-            <div style={{ color: '#888', fontSize: 14 }}>{book.year || 'Год неизвестен'}</div>
-            {book.file && (
-              <a
-                href={book.file}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-block',
-                  marginTop: 10,
-                  color: '#008080',
-                  textDecoration: 'underline'
-                }}
-                onClick={e => e.stopPropagation()}
+            <div style={{ color: '#555', marginBottom: 4 }}>{book.author_name || 'Автор неизвестен'}</div>
+            <div style={{ color: '#888', fontSize: 14 }}>{book.publication_year || 'Год неизвестен'}</div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+              <Link
+                to={`/books/${book.id}`}
+                style={{ color: '#008080', textDecoration: 'underline' }}
               >
-                Читать / Скачать
-              </a>
-            )}
+                Подробнее
+              </Link>
+              {book.file_url && (
+                <a
+                  href={book.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#008080', textDecoration: 'underline' }}
+                >
+                  Читать / Скачать
+                </a>
+              )}
+            </div>
           </div>
         ))}
       </div>

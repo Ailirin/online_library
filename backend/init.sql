@@ -10,3 +10,5 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Настройка кодировки и локали
 ALTER DATABASE online_library SET timezone TO 'Europe/Moscow';
+-- Гарантируем клиентскую кодировку UTF-8 для всех подключений к базе
+ALTER DATABASE online_library SET client_encoding TO 'UTF8';

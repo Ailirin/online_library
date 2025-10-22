@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import apiService from '../services/api';
 
 function BookDetail() {
@@ -11,9 +10,15 @@ function BookDetail() {
   const [externalError, setExternalError] = useState('');
 
   useEffect(() => {
-    axios.get(`http://localhost:8000/api/books/${id}/`)
-      .then(res => setBook(res.data))
-      .catch(err => console.error(err));
+    async function fetchBook() {
+      try {
+        const data = await apiService.getBook(id);
+        setBook(data);
+      } catch (err) {
+        setBook(null);
+      }
+    }
+    fetchBook();
   }, [id]);
 
   const handleFindExternalFile = async () => {
@@ -23,7 +28,6 @@ function BookDetail() {
     try {
       const data = await apiService.findOpenLibraryFile(book.title);
       if (data && data.length > 0) {
-        // Берем первую найденную книгу
         setExternalFile(data[0].url);
       } else {
         setExternalError('Файл не найден в Open Library');
@@ -39,21 +43,23 @@ function BookDetail() {
   return (
     <div style={{ padding: 20 }}>
       <h2>{book.title}</h2>
-      <p>Автор: {book.author}</p>
-      <p>Дата публикации: {book.published_date}</p>
+      <p>Автор: {book.author_name}</p>
+      <p>Жанр: {book.genre_name}</p>
+      <p>Дата публикации: {book.publication_year}</p>
+      {book.description && <p>Описание: {book.description}</p>}
 
-      {book.file && (
+      {book.file_url && (
         <div style={{ marginTop: 20 }}>
           <h3>Читать книгу:</h3>
-          {book.file.endsWith('.pdf') ? (
+          {book.file_url.endsWith('.pdf') ? (
             <iframe
-              src={book.file}
+              src={book.file_url}
               width="100%"
               height="600px"
               title="Книга"
             />
           ) : (
-            <a href={book.file} target="_blank" rel="noopener noreferrer">
+            <a href={book.file_url} target="_blank" rel="noopener noreferrer">
               Открыть файл
             </a>
           )}
@@ -61,7 +67,7 @@ function BookDetail() {
       )}
 
       {/* Кнопка поиска файла в Open Library */}
-      {!book.file && (
+      {!book.file_url && (
         <div style={{ marginTop: 20 }}>
           <button onClick={handleFindExternalFile} disabled={loadingExternal}>
             {loadingExternal ? 'Поиск...' : 'Найти файл в Open Library'}
