@@ -90,6 +90,12 @@ class BookListCreateAPIView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
+    
+    def create(self, request, *args, **kwargs):
+        print("BookListCreateAPIView.create called")
+        print("Request data:", request.data)
+        print("Request FILES:", request.FILES)
+        return super().create(request, *args, **kwargs)
 
 # Получение, обновление, удаление книги по id (PUT/PATCH/DELETE только для админа)
 class BookRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -100,6 +106,12 @@ class BookRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
+    
+    def update(self, request, *args, **kwargs):
+        print("BookRetrieveUpdateDestroyAPIView.update called")
+        print("Request data:", request.data)
+        print("Request FILES:", request.FILES)
+        return super().update(request, *args, **kwargs)
 
 # Регистрация нового пользователя
 class RegisterView(APIView):

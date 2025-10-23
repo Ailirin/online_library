@@ -46,7 +46,7 @@ urlpatterns = [
     path('', home_view, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),  # API endpoints
-    path('library/', include('library.urls')),  # подключение маршрутов из приложения
+    path('api/', include('library.urls')),  # подключение маршрутов из приложения
     # Обработка txt-файлов книг через представление с корректной кодировкой UTF-8
     re_path(r'^media/books/(?P<path>.*\.txt)$', download_txt, name='download_txt_root'),
 ]

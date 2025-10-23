@@ -21,12 +21,19 @@ const appReducer = (state, action) => {
     case 'LOGIN_SUCCESS':
       return {
         ...state,
-        user: { username: action.payload.username },
+        user: { username: action.payload.username, is_staff: action.payload.is_staff, is_superuser: action.payload.is_superuser },
         isAuthenticated: true,
         access: action.payload.access,
         refresh: action.payload.refresh,
         loading: false,
         error: null,
+      };
+    case 'SET_PROFILE':
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: true,
+        loading: false,
       };
     case 'LOGOUT':
       return {
@@ -95,6 +102,10 @@ export const AppProvider = ({ children }) => {
         type: 'LOGIN_SUCCESS',
         payload: { username, access },
       });
+      // Пытаемся подтянуть профиль при старте
+      apiService.getProfile().then((profile) => {
+        dispatch({ type: 'SET_PROFILE', payload: profile });
+      }).catch(() => {});
     }
   }, []);
 
@@ -106,11 +117,12 @@ export const AppProvider = ({ children }) => {
         localStorage.setItem('username', username);
         localStorage.setItem('access', response.access);
         localStorage.setItem('refresh', response.refresh);
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: { username, access: response.access, refresh: response.refresh },
-        });
-        return response;
+        // После получения токена — тянем профиль
+        const profile = await apiService.getProfile();
+        dispatch({ type: 'SET_PROFILE', payload: profile });
+        // Для совместимости — сохраним минимум в LOGIN_SUCCESS
+        dispatch({ type: 'LOGIN_SUCCESS', payload: { username, access: response.access, refresh: response.refresh, is_staff: profile.is_staff, is_superuser: profile.is_superuser } });
+        return { ...response, profile };
       } catch (error) {
         dispatch({ type: 'SET_ERROR', payload: error.message });
         throw error;

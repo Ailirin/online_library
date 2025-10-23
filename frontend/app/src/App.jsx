@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider, App as AntdApp } from 'antd'; // Импортируем App как AntdApp
 import { AppProvider } from './context/AppContext';
 import Header from './components/Header';
+import SimpleSidebar from './components/SimpleSidebar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import BooksPage from './pages/BooksPage';
@@ -35,9 +36,10 @@ function App() {
       <ConfigProvider theme={theme}>
         <AntdApp>
           <Router>
-            <div className="App">
+            <div className="App" style={{ width: '100%', minHeight: '100vh' }}>
               <Header />
-              <main style={{ minHeight: 'calc(100vh - 120px)' }}>
+              <SimpleSidebar />
+              <main style={{ width: '100%', minHeight: '100vh' }}>
                 <Routes>
                   {/* Публичные маршруты */}
                   <Route path="/" element={<HomePage />} />

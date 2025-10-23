@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Book, Review, SiteSetting
+from .models import Book, Review, SiteSetting, Author, Genre
 
 # Сериализатор для пользователя
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'is_staff', 'is_superuser', 'is_active']
         read_only_fields = ['id', 'date_joined']
 
 # Сериализатор для книги
@@ -21,6 +21,16 @@ class BookSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'author', 'genre', 'publication_year', 'isbn', 'description', 
                  'cover_image', 'file', 'cover_image_url', 'file_url', 'author_name', 'genre_name']
         read_only_fields = ['id']  # id будет только для чтения
+    
+    def create(self, validated_data):
+        # Логируем данные для отладки
+        print("Creating book with data:", validated_data)
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        # Логируем данные для отладки
+        print("Updating book with data:", validated_data)
+        return super().update(instance, validated_data)
     
     def get_cover_image_url(self, obj):
         if obj.cover_image:
@@ -44,6 +54,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = '__all__'
         read_only_fields = ['id', 'created_at']  # id и дата создания только для чтения
+
+# Сериализатор для автора
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ['id', 'name', 'birth_year', 'nationality', 'biography']
+        read_only_fields = ['id']
+
+# Сериализатор для жанра
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ['id', 'name', 'description']
+        read_only_fields = ['id']
 
 # Сериализатор для настроек сайта
 class SiteSettingSerializer(serializers.ModelSerializer):

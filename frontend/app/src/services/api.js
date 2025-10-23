@@ -33,13 +33,28 @@ class ApiService {
     return headers;
   }
 
+  // Получить заголовки без Content-Type (для FormData)
+  getHeadersWithoutContentType() {
+    const headers = {};
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    return headers;
+  }
+
   // Базовый метод для HTTP запросов
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
-      headers: this.getHeaders(),
       ...options,
     };
+    
+    // Если заголовки не переданы, используем стандартные
+    if (!config.headers) {
+      config.headers = this.getHeaders();
+    }
 
     try {
       const response = await fetch(url, config);
@@ -52,11 +67,14 @@ class ApiService {
             // Повторяем запрос с новым токеном
             const newConfig = {
               ...config,
-              headers: this.getHeaders(),
+              headers: {
+                ...config.headers,
+                'Authorization': `Bearer ${this.token}`, // Обновляем токен
+              },
             };
             const retryResponse = await fetch(url, newConfig);
             if (retryResponse.ok) {
-              return await retryResponse.json();
+              return await this.parseResponse(retryResponse);
             }
           } catch (refreshError) {
             // Если не удалось обновить токен, очищаем его
@@ -65,14 +83,45 @@ class ApiService {
           }
         }
         
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await this.parseResponse(response).catch(() => ({}));
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      return await this.parseResponse(response);
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
+    }
+  }
+
+  // Парсинг ответа с обработкой пустых ответов
+  async parseResponse(response) {
+    const text = await response.text();
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Response text:', text);
+    console.log('Response text length:', text.length);
+    
+    if (!text) {
+      console.log('Empty response, returning empty object');
+      return {};
+    }
+    
+    if (text.trim() === '') {
+      console.log('Empty text after trim, returning empty object');
+      return {};
+    }
+    
+    try {
+      const parsed = JSON.parse(text);
+      console.log('Successfully parsed JSON:', parsed);
+      return parsed;
+    } catch (e) {
+      console.error('Failed to parse JSON response:', e);
+      console.error('Raw text:', text);
+      console.error('Text type:', typeof text);
+      console.error('Text length:', text.length);
+      return { detail: text, error: 'JSON parse error' };
     }
   }
 
@@ -92,6 +141,11 @@ class ApiService {
       localStorage.setItem('refresh_token', response.refresh);
     }
     return response;
+  }
+
+  // Получить профиль текущего пользователя
+  async getProfile() {
+    return await this.request('/auth/profile/');
   }
 
   // Обновить токен
@@ -235,6 +289,98 @@ class ApiService {
   // Поиск файла книги в OpenLibrary
   async findOpenLibraryFile(title) {
     return await this.request(`/find_openlibrary_file/?title=${encodeURIComponent(title)}`);
+  }
+
+  // === АДМИН ФУНКЦИИ ===
+  
+  // Получить список пользователей
+  async getUsers(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = queryString ? `/users/?${queryString}` : '/users/';
+    return await this.request(endpoint);
+  }
+
+  // Создать пользователя
+  async createUser(userData) {
+    return await this.request('/users/', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  // Обновить пользователя
+  async updateUser(id, userData) {
+    return await this.request(`/users/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  // Удалить пользователя
+  async deleteUser(id) {
+    return await this.request(`/users/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Создать книгу
+  async createBook(bookData) {
+    const isFormData = bookData instanceof FormData;
+    const headers = isFormData ? this.getHeadersWithoutContentType() : this.getHeaders();
+    
+    return await this.request('/books/', {
+      method: 'POST',
+      headers,
+      body: isFormData ? bookData : JSON.stringify(bookData),
+    });
+  }
+  
+  // Обновить книгу
+  async updateBook(id, bookData) {
+    const isFormData = bookData instanceof FormData;
+    const headers = isFormData ? this.getHeadersWithoutContentType() : this.getHeaders();
+    
+    return await this.request(`/books/${id}/`, {
+      method: 'PATCH',
+      headers,
+      body: isFormData ? bookData : JSON.stringify(bookData),
+    });
+  }
+
+  // Удалить книгу
+  async deleteBook(id) {
+    return await this.request(`/books/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Получить настройки
+  async getSettings() {
+    return await this.request('/settings/');
+  }
+
+  // Обновить настройку
+  async updateSetting(id, settingData) {
+    return await this.request(`/settings/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(settingData),
+    });
+  }
+
+  // Создать автора
+  async createAuthor(authorData) {
+    return await this.request('/authors/', {
+      method: 'POST',
+      body: JSON.stringify(authorData),
+    });
+  }
+
+  // Создать жанр
+  async createGenre(genreData) {
+    return await this.request('/genres/', {
+      method: 'POST',
+      body: JSON.stringify(genreData),
+    });
   }
 }
 

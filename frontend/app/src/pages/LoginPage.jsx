@@ -11,9 +11,15 @@ function LoginPage() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      await actions.login(values.username, values.password);
+      const { profile } = await actions.login(values.username, values.password);
       message.success('Вход выполнен успешно!');
-      navigate('/catalog');
+      const admin = profile?.is_staff || profile?.is_superuser;
+      if (admin) {
+        // Переходим в серверную админку Django
+        window.location.href = '/admin/';
+      } else {
+        navigate('/catalog');
+      }
     } catch (error) {
       message.error('Неверный логин или пароль');
     } finally {
@@ -31,52 +37,133 @@ function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
+      {/* Анимированные частицы */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'radial-gradient(circle at 20% 50%, rgba(32, 178, 170, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.1) 0%, transparent 50%)',
+        animation: 'float 6s ease-in-out infinite'
+      }} />
+      
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(20px)',
+        padding: '40px',
+        borderRadius: '20px',
+        minWidth: '400px',
+        maxWidth: '450px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+      }}>
+        <h2 style={{
+          textAlign: 'center',
+          marginBottom: '30px',
+          color: 'white',
+          fontSize: '28px',
+          fontWeight: 'bold',
+          background: 'linear-gradient(135deg, #20B2AA, #40E0D0)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          🔐 Вход в систему
+        </h2>
+        
         <Form
           name="login"
           onFinish={onFinish}
-          style={{
-          background: 'rgba(255,255,255,0.2)',
-          backdropFilter: 'blur(4px)',
-          padding: 32,
-          borderRadius: 12,
-          minWidth: 320,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.12)'
-          }}
-         layout="vertical"
+          autoComplete="off"
+          layout="vertical"
         >
-        <Form.Item
-          label="Имя пользователя"
-          name="username"
-          rules={[{ required: true, message: 'Введите имя пользователя!' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Пароль"
-          name="password"
-          rules={[{ required: true, message: 'Введите пароль!' }]}
-        >
-          <Input.Password />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" block loading={loading}>
-            Войти
-          </Button>
-        </Form.Item>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          Нет аккаунта?{' '}
-          <Link to="/register">
-            <Button type="link">Зарегистрироваться</Button>
-          </Link>
-        </div>
-      </Form>
+          <Form.Item
+            label={<span style={{ color: 'white', fontWeight: '600' }}>Имя пользователя</span>}
+            name="username"
+            rules={[{ required: true, message: 'Введите имя пользователя!' }]}
+          >
+            <Input 
+              autoComplete="off" 
+              autoCorrect="off" 
+              autoCapitalize="off" 
+              spellCheck="false"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
+                color: 'white',
+                height: '45px',
+                fontSize: '16px'
+              }}
+              placeholder="Введите имя пользователя"
+            />
+          </Form.Item>
+          
+          <Form.Item
+            label={<span style={{ color: 'white', fontWeight: '600' }}>Пароль</span>}
+            name="password"
+            rules={[{ required: true, message: 'Введите пароль!' }]}
+          >
+            <Input.Password 
+              autoComplete="off" 
+              autoCorrect="off" 
+              autoCapitalize="off" 
+              spellCheck="false"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
+                color: 'white',
+                height: '45px',
+                fontSize: '16px'
+              }}
+              placeholder="Введите пароль"
+            />
+          </Form.Item>
+          
+          <Form.Item>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              block 
+              loading={loading}
+              style={{
+                background: 'linear-gradient(135deg, #20B2AA, #40E0D0)',
+                border: 'none',
+                borderRadius: '12px',
+                height: '50px',
+                fontSize: '16px',
+                fontWeight: '600',
+                boxShadow: '0 4px 16px rgba(32, 178, 170, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Войти
+            </Button>
+          </Form.Item>
+          
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Нет аккаунта? </span>
+            <Link to="/register">
+              <span style={{ 
+                color: '#20B2AA', 
+                textDecoration: 'none',
+                fontWeight: '600',
+                transition: 'color 0.3s ease'
+              }}>
+                Зарегистрироваться
+              </span>
+            </Link>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }
