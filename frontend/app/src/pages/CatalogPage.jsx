@@ -134,25 +134,43 @@ function CatalogPage() {
         <Row gutter={[24, 24]}>
           {books.map(book => (
             <Col xs={24} sm={12} md={8} lg={6} key={book.id}>
-              <Card
-                hoverable
+              <div
                 onClick={() => setSelectedBook(book)}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.25)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
                   borderRadius: '24px',
                   height: '100%',
                   transition: 'all 0.3s ease',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}
-                cover={
-                  book.cover_image_url ? (
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.6)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+              >
+                {/* Обложка книги */}
+                <div style={{ position: 'relative', height: '240px' }}>
+                  {book.cover_image_url ? (
                     <img 
                       src={book.cover_image_url} 
                       alt={book.title} 
                       style={{ 
-                        height: '200px', 
+                        width: '100%',
+                        height: '100%', 
                         objectFit: 'cover',
                         borderRadius: '16px 16px 0 0'
                       }} 
@@ -162,14 +180,16 @@ function CatalogPage() {
                       src={book.cover_image} 
                       alt={book.title} 
                       style={{ 
-                        height: '200px', 
+                        width: '100%',
+                        height: '100%', 
                         objectFit: 'cover',
                         borderRadius: '16px 16px 0 0'
                       }} 
                     />
                   ) : (
                     <div style={{
-                      height: '200px',
+                      width: '100%',
+                      height: '100%',
                       background: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: '16px 16px 0 0',
                       display: 'flex',
@@ -180,66 +200,122 @@ function CatalogPage() {
                     }}>
                       <BookOutlined />
                     </div>
-                  )
-                }
-                actions={[
-                  <Link to={`/books/${book.id}`} onClick={e => e.stopPropagation()}>
-                    <Button 
-                      type="link" 
-                      icon={<EyeOutlined />}
-                      style={{ color: 'white' }}
-                    >
-                      Подробнее
-                    </Button>
-                  </Link>,
-                  book.file_url && (
-                    <a 
-                      href={book.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <Button 
-                        type="link" 
-                        icon={<DownloadOutlined />}
-                        style={{ color: 'white' }}
-                      >
-                        Скачать
-                      </Button>
-                    </a>
-                  )
-                ]}
-              >
-                <Card.Meta
-                  title={
+                  )}
+                </div>
+
+                {/* Информация о книге */}
+                <div style={{ 
+                  padding: '12px',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  background: 'rgba(0, 0, 0, 0.1)',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <div>
                     <div style={{ 
                       color: 'white', 
                       fontWeight: 600, 
-                      fontSize: '16px',
-                      marginBottom: '8px'
+                      fontSize: '14px',
+                      marginBottom: '6px',
+                      textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)',
+                      lineHeight: '1.2',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
                     }}>
                       {book.title}
                     </div>
-                  }
-                  description={
-                    <div>
-                      <div style={{ 
-                        color: 'rgba(255, 255, 255, 0.8)', 
-                        marginBottom: '4px',
-                        fontSize: '14px'
-                      }}>
-                        {book.author_name || 'Автор неизвестен'}
-                      </div>
-                      <div style={{ 
-                        color: 'rgba(255, 255, 255, 0.6)', 
-                        fontSize: '12px'
-                      }}>
-                        {book.publication_year || 'Год неизвестен'}
-                      </div>
+                    <div style={{ 
+                      color: 'rgba(255, 255, 255, 0.9)', 
+                      marginBottom: '3px',
+                      fontSize: '12px',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
+                      {book.author_name || 'Автор неизвестен'}
                     </div>
-                  }
-                />
-              </Card>
+                    <div style={{ 
+                      color: 'rgba(255, 255, 255, 0.7)', 
+                      fontSize: '11px',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)'
+                    }}>
+                      {book.publication_year || 'Год неизвестен'}
+                    </div>
+                  </div>
+
+                  {/* Кнопки действий */}
+                  <div style={{ 
+                    marginTop: '8px',
+                    display: 'flex',
+                    gap: '6px',
+                    justifyContent: 'space-between'
+                  }}>
+                    <Link to={`/books/${book.id}`} onClick={e => e.stopPropagation()}>
+                      <Button 
+                        type="link" 
+                        icon={<EyeOutlined />}
+                        style={{ 
+                          color: '#1890ff',
+                          fontWeight: 600,
+                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                          transition: 'all 0.3s ease',
+                          padding: '2px 6px',
+                          height: 'auto',
+                          fontSize: '12px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = '#40a9ff';
+                          e.target.style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = '#1890ff';
+                          e.target.style.transform = 'scale(1)';
+                        }}
+                      >
+                        {t('book.details')}
+                      </Button>
+                    </Link>
+                    {book.file_url && (
+                      <a 
+                        href={book.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <Button 
+                          type="link" 
+                          icon={<DownloadOutlined />}
+                          style={{ 
+                            color: '#52c41a',
+                            fontWeight: 600,
+                            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                            transition: 'all 0.3s ease',
+                            padding: '2px 6px',
+                            height: 'auto',
+                            fontSize: '12px'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.color = '#73d13d';
+                            e.target.style.transform = 'scale(1.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.color = '#52c41a';
+                            e.target.style.transform = 'scale(1)';
+                          }}
+                        >
+                          {t('book.download')}
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
             </Col>
           ))}
         </Row>

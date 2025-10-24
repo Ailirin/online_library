@@ -127,6 +127,10 @@ const testTranslations = {
     'search.search': 'Поиск',
     'search.searching': 'Поиск...',
     
+    // Книги
+    'book.details': 'Подробнее',
+    'book.download': 'Скачать',
+    
     // Общие
     'common.loading': 'Загрузка...',
     'common.error': 'Произошла ошибка',
@@ -266,6 +270,10 @@ const testTranslations = {
     'search.search': 'Search',
     'search.searching': 'Searching...',
     
+    // Books
+    'book.details': 'Details',
+    'book.download': 'Download',
+    
     // Common
     'common.loading': 'Loading...',
     'common.error': 'An error occurred',
@@ -404,6 +412,10 @@ const testTranslations = {
     'search.placeholder': 'Увядзіце назву кнігі',
     'search.search': 'Пошук',
     'search.searching': 'Пошук...',
+    
+    // Кнігі
+    'book.details': 'Падрабязна',
+    'book.download': 'Спампаваць',
     
     // Агульныя
     'common.loading': 'Загрузка...',
