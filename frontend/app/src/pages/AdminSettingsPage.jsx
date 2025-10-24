@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { message, Spin, Card, Input, Button, Space, Typography, Divider } from 'antd';
+import { useTranslation } from '../hooks/useTranslation';
 import { 
   SettingOutlined, 
   SaveOutlined, 
@@ -151,6 +152,7 @@ const getSettingIcon = (key) => {
 };
 
 const AdminSettingsPage = () => {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -163,10 +165,10 @@ const AdminSettingsPage = () => {
       setLoading(true);
       const res = await apiService.getSettings();
       setSettings(res.results || res || []); // если пагинация или пустой массив
-      message.success('Настройки загружены успешно');
+      message.success(t('admin.settings.messages.loadedSuccess'));
     } catch (error) {
       console.error('Ошибка загрузки настроек:', error);
-      message.error('Ошибка загрузки настроек');
+      message.error(t('admin.settings.messages.loadError'));
     } finally {
       setLoading(false);
     }
@@ -179,10 +181,10 @@ const AdminSettingsPage = () => {
   const handleSave = async (id, value) => {
     try {
       await apiService.updateSetting(id, { value });
-      message.success('Настройка успешно сохранена');
+      message.success(t('admin.settings.messages.savedSuccess'));
     } catch (error) {
       console.error('Ошибка сохранения настройки:', error);
-      message.error('Ошибка сохранения настройки');
+      message.error(t('admin.settings.messages.saveError'));
     }
   };
 
@@ -191,10 +193,10 @@ const AdminSettingsPage = () => {
       for (const setting of settings) {
         await apiService.updateSetting(setting.id, { value: setting.value });
       }
-      message.success('Все настройки сохранены успешно');
+      message.success(t('admin.settings.messages.allSavedSuccess'));
     } catch (error) {
       console.error('Ошибка сохранения настроек:', error);
-      message.error('Ошибка сохранения настроек');
+      message.error(t('admin.settings.messages.allSaveError'));
     }
   };
 
@@ -207,7 +209,7 @@ const AdminSettingsPage = () => {
         alignItems: 'center',
         background: 'linear-gradient(135deg, #008080 0%, #20b2aa 25%, #40e0d0 50%, #00ced1 75%, #008b8b 100%)'
       }}>
-        <Spin size="large" tip="Загрузка настроек..." />
+        <Spin size="large" tip={t('admin.settings.loading')} />
       </div>
     );
   }
@@ -255,7 +257,7 @@ const AdminSettingsPage = () => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            Настройки сайта
+            {t('admin.settings.title')}
           </h1>
         </div>
 
@@ -280,10 +282,10 @@ const AdminSettingsPage = () => {
             >
               <SettingOutlined style={{ fontSize: '48px', color: 'white', marginBottom: '16px' }} />
               <Title level={3} style={{ color: 'white', marginBottom: '8px' }}>
-                Настройки не найдены
+                {t('admin.settings.notFound')}
               </Title>
               <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                В системе пока нет настроек. Добавьте их через админ-панель Django.
+                {t('admin.settings.noSettingsDescription')}
               </Text>
             </Card>
           ) : (
@@ -296,7 +298,7 @@ const AdminSettingsPage = () => {
               }}>
                 <Title level={3} style={{ color: 'white', margin: 0 }}>
                   <SettingOutlined style={{ marginRight: '8px' }} />
-                  Управление настройками
+                  {t('admin.settings.management')}
                 </Title>
                 <Space>
                   <Button 
@@ -308,7 +310,7 @@ const AdminSettingsPage = () => {
                       color: 'white'
                     }}
                   >
-                    Обновить
+                    {t('admin.settings.refresh')}
                   </Button>
                   <Button 
                     type="primary" 
@@ -319,7 +321,7 @@ const AdminSettingsPage = () => {
                       border: '1px solid #008080'
                     }}
                   >
-                    Сохранить все
+                    {t('admin.settings.saveAll')}
                   </Button>
                 </Space>
               </div>
@@ -333,12 +335,21 @@ const AdminSettingsPage = () => {
                     style={{ 
                       background: 'rgba(255, 255, 255, 0.1)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '12px'
+                      borderRadius: '12px',
+                      minHeight: '120px'
                     }}
-                    bodyStyle={{ padding: '20px' }}
+                    bodyStyle={{ padding: '20px', height: '100%' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                      <div style={{ minWidth: '250px' }}>
+                    <div className="setting-card" style={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start', 
+                      gap: '16px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <div className="setting-info" style={{ 
+                        width: '300px', 
+                        flexShrink: 0
+                      }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                           <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
                             {getSettingIcon(setting.key)}
@@ -351,7 +362,8 @@ const AdminSettingsPage = () => {
                           fontSize: '12px', 
                           color: 'rgba(255, 255, 255, 0.7)',
                           marginTop: '4px',
-                          marginBottom: '8px'
+                          marginBottom: '8px',
+                          lineHeight: '1.4'
                         }}>
                           {getSettingDescription(setting.key)}
                         </div>
@@ -363,12 +375,15 @@ const AdminSettingsPage = () => {
                           {setting.key}
                         </div>
                       </div>
-                      <div style={{ flex: 1 }}>
+                      <div className="setting-input" style={{ 
+                        flex: 1, 
+                        minWidth: '200px'
+                      }}>
                         <Input
                           value={setting.value || ''}
                           onChange={e => handleChange(setting.id, e.target.value)}
                           onBlur={() => handleSave(setting.id, setting.value)}
-                          placeholder={`Введите значение для "${getSettingLabel(setting.key)}"`}
+                          placeholder={t('admin.settings.enterValue', { setting: getSettingLabel(setting.key) })}
                           style={{
                             background: 'rgba(255, 255, 255, 0.1)',
                             border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -377,17 +392,23 @@ const AdminSettingsPage = () => {
                           }}
                         />
                       </div>
-                      <Button 
-                        type="primary" 
-                        size="small"
-                        onClick={() => handleSave(setting.id, setting.value)}
-                        style={{ 
-                          background: '#008080', 
-                          border: '1px solid #008080'
-                        }}
-                      >
-                        Сохранить
-                      </Button>
+                      <div className="setting-button" style={{ 
+                        width: '80px', 
+                        flexShrink: 0
+                      }}>
+                        <Button 
+                          type="primary" 
+                          size="small"
+                          onClick={() => handleSave(setting.id, setting.value)}
+                          style={{ 
+                            background: '#008080', 
+                            border: '1px solid #008080',
+                            width: '100%'
+                          }}
+                        >
+                          {t('admin.settings.save')}
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -397,7 +418,7 @@ const AdminSettingsPage = () => {
         </div>
       </div>
 
-      {/* CSS анимации */}
+      {/* CSS анимации и адаптивность */}
       <style jsx>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
@@ -408,6 +429,27 @@ const AdminSettingsPage = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        @media (max-width: 768px) {
+          .setting-card {
+            flex-direction: column !important;
+            gap: 12px !important;
+          }
+          
+          .setting-info {
+            width: 100% !important;
+            margin-bottom: 8px;
+          }
+          
+          .setting-input {
+            min-width: 100% !important;
+          }
+          
+          .setting-button {
+            width: 100px !important;
+            align-self: flex-end;
+          }
         }
       `}</style>
     </div>

@@ -1,7 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import AuthorViewSet, GenreViewSet, ReviewViewSet
+from .views import (
+    AuthorViewSet, GenreViewSet, ReviewViewSet,
+    UserFavoriteViewSet, UserStatsViewSet
+)
 from library.views import RegisterView, ProfileView, LoginView, find_openlibrary_books
 
 # Создаем роутер для ViewSets
@@ -9,6 +12,10 @@ router = DefaultRouter()
 router.register(r'authors', AuthorViewSet)
 router.register(r'genres', GenreViewSet)
 router.register(r'reviews', ReviewViewSet)
+
+# Роуты для пользовательских функций
+router.register(r'user-favorites', UserFavoriteViewSet, basename='userfavorite')
+router.register(r'user-stats', UserStatsViewSet, basename='userstats')
 
 urlpatterns = [
     # JWT аутентификация

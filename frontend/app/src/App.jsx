@@ -14,11 +14,15 @@ import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import FavoritesPage from './pages/FavoritesPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminUserProfilePage from './pages/AdminUserProfilePage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
-import TestPage from './pages/TestPage';
+import UserReviewsPage from './pages/UserReviewsPage';
+import AdminReviewsPage from './pages/AdminReviewsPage';
+import AllReviewsPage from './pages/AllReviewsPage';
 import './App.css';
 
 // Тема Ant Design
@@ -50,14 +54,24 @@ function App() {
                   <Route path="/books" element={<BooksPage />} />
                   <Route path="/books/:id" element={<BookDetail />} />
                   <Route path="/catalog" element={<CatalogPage />} />
+                  <Route path="/all-reviews" element={<AllReviewsPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/test" element={<TestPage />} />
 
                   {/* Защищенные маршруты */}
                   <Route path="/profile" element={
                     <ProtectedRoute>
                       <ProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/favorites" element={
+                    <ProtectedRoute>
+                      <FavoritesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/reviews" element={
+                    <ProtectedRoute>
+                      <UserReviewsPage />
                     </ProtectedRoute>
                   } />
 
@@ -75,6 +89,16 @@ function App() {
                   <Route path="/admin/users" element={
                     <ProtectedRoute adminOnly={true}>
                       <AdminUsersPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users/:userId" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminUserProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/reviews" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminReviewsPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/settings" element={

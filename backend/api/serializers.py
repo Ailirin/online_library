@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from library.models import Author, Genre, Book, Review
 
 
@@ -75,11 +76,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов"""
     book_title = serializers.CharField(source='book.title', read_only=True)
     user_name = serializers.CharField(source='user.username', read_only=True)
+    book_detail = BookSerializer(source='book', read_only=True)  # Полная информация о книге только для чтения
     
     class Meta:
         model = Review
         fields = [
-            'id', 'book', 'book_title', 'user', 'user_name',
+            'id', 'book', 'book_detail', 'book_title', 'user', 'user_name',
             'rating', 'comment', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']
@@ -88,6 +90,19 @@ class ReviewSerializer(serializers.ModelSerializer):
         # Автоматически устанавливаем текущего пользователя
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+    
+    def validate(self, data):
+        # Дополнительная валидация на уровне сериализатора
+        if self.context.get('request') and self.context['request'].user.is_authenticated:
+            book = data.get('book')
+            user = self.context['request'].user
+            
+            # Проверяем, не существует ли уже отзыв от этого пользователя на эту книгу
+            if self.instance is None:  # Только при создании нового отзыва
+                if Review.objects.filter(book=book, user=user).exists():
+                    raise ValidationError({'book': 'Вы уже оставили отзыв на эту книгу'})
+        
+        return data
 
 
 class BookDetailSerializer(BookSerializer):
@@ -96,3 +111,34 @@ class BookDetailSerializer(BookSerializer):
     
     class Meta(BookSerializer.Meta):
         fields = BookSerializer.Meta.fields + ['reviews']
+
+
+# Новые сериализаторы для профиля пользователя
+from django.contrib.auth.models import User
+from .models import (
+    UserFavorite
+)
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_superuser', 'is_staff']
+
+
+class UserFavoriteSerializer(serializers.ModelSerializer):
+    book = BookSerializer(read_only=True)
+    book_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = UserFavorite
+        fields = ['id', 'book', 'book_id', 'added_at']
+        read_only_fields = ['added_at']
+
+
+
+
+
+# Статистика пользователя
+class UserStatsSerializer(serializers.Serializer):
+    books_favorited = serializers.IntegerField()
+    reviews_written = serializers.IntegerField()

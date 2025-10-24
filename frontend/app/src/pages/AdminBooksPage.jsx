@@ -3,8 +3,10 @@ import { Button, Modal, Form, Input, message, AutoComplete, Select, Space, Table
 import { Link } from 'react-router-dom';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import apiService from '../services/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 function AdminBooksPage() {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [books, setBooks] = useState([]);
@@ -94,7 +96,7 @@ const handleEditBook = (book) => {
 // Создание нового автора
 const handleCreateAuthor = async () => {
   if (!newAuthorName.trim()) {
-    message.warning('Введите имя автора');
+    message.warning(t('admin.books.messages.enterAuthorName'));
     return;
   }
   
@@ -104,16 +106,16 @@ const handleCreateAuthor = async () => {
     form.setFieldsValue({ author: newAuthor.id });
     setIsCreatingAuthor(false);
     setNewAuthorName('');
-    message.success('Автор создан');
+    message.success(t('admin.books.messages.authorCreated'));
   } catch (e) {
-    message.error('Ошибка при создании автора');
+    message.error(t('admin.books.messages.authorCreationError'));
   }
 };
 
 // Создание нового жанра
 const handleCreateGenre = async () => {
   if (!newGenreName.trim()) {
-    message.warning('Введите название жанра');
+    message.warning(t('admin.books.messages.enterGenreName'));
     return;
   }
   
@@ -123,9 +125,9 @@ const handleCreateGenre = async () => {
     form.setFieldsValue({ genre: newGenre.id });
     setIsCreatingGenre(false);
     setNewGenreName('');
-    message.success('Жанр создан');
+    message.success(t('admin.books.messages.genreCreated'));
   } catch (e) {
-    message.error('Ошибка при создании жанра');
+    message.error(t('admin.books.messages.genreCreationError'));
   }
 };
 
@@ -154,11 +156,11 @@ const handleModalOk = async () => {
     if (editingBook) {
       // Редактирование существующей книги
       await apiService.updateBook(editingBook.id, bookData);
-      message.success('Книга обновлена');
+      message.success(t('admin.books.messages.bookUpdated'));
     } else {
       // Создание новой книги
       await apiService.createBook(bookData);
-      message.success('Книга добавлена');
+      message.success(t('admin.books.messages.bookAdded'));
     }
     
     setIsModalOpen(false);
@@ -170,7 +172,7 @@ const handleModalOk = async () => {
     setBooks(res.results || res);
   } catch (e) {
     console.error('Ошибка при сохранении книги:', e);
-    message.error('Ошибка при сохранении книги');
+    message.error(t('admin.books.messages.bookSaveError'));
   } finally {
     setLoading(false);
   }
@@ -179,20 +181,20 @@ const handleModalOk = async () => {
 // Удаление книги
 const handleDeleteBook = async () => {
   if (!deleteBookId) {
-    message.warning('Выберите книгу для удаления');
+    message.warning(t('admin.books.messages.selectBookToDelete'));
     return;
   }
   
   try {
     await apiService.deleteBook(deleteBookId);
-    message.success('Книга удалена');
+    message.success(t('admin.books.messages.bookDeleted'));
     setSearchValue('');
     setDeleteBookId(null);
     // Обновить список книг
     const res = await apiService.getBooks();
     setBooks(res.results || res);
   } catch (e) {
-    message.error('Ошибка при удалении книги');
+    message.error(t('admin.books.messages.bookDeleteError'));
   }
 };
 
@@ -201,12 +203,12 @@ const handleDeleteBookFromTable = async (bookId) => {
   try {
     setLoading(true);
     await apiService.deleteBook(bookId);
-    message.success('Книга удалена');
+    message.success(t('admin.books.messages.bookDeleted'));
     // Обновить список книг
     const res = await apiService.getBooks();
     setBooks(res.results || res);
   } catch (e) {
-    message.error('Ошибка при удалении книги');
+    message.error(t('admin.books.messages.bookDeleteError'));
   } finally {
     setLoading(false);
   }
@@ -245,7 +247,7 @@ const handleSaveEdit = async (record) => {
     };
     
     await apiService.updateBook(record.id, bookData);
-    message.success('Книга обновлена');
+    message.success(t('admin.books.messages.bookUpdated'));
     setEditingRowId(null);
     
     // Обновить список книг
@@ -253,7 +255,7 @@ const handleSaveEdit = async (record) => {
     setBooks(res.results || res);
   } catch (e) {
     console.error('Ошибка при обновлении книги:', e);
-    message.error('Ошибка при обновлении книги');
+    message.error(t('admin.books.messages.bookUpdateError'));
   } finally {
     setLoading(false);
   }
@@ -268,14 +270,14 @@ const handleSaveEdit = async (record) => {
   // Определение колонок таблицы
   const columns = [
     {
-      title: 'ID',
+      title: t('admin.books.table.id'),
       dataIndex: 'id',
       key: 'id',
       width: 60,
       sorter: (a, b) => a.id - b.id,
     },
     {
-      title: 'Обложка',
+      title: t('admin.books.table.cover'),
       key: 'cover',
       width: 80,
       render: (_, record) => (
@@ -305,7 +307,7 @@ const handleSaveEdit = async (record) => {
       ),
     },
     {
-      title: 'Название',
+      title: t('admin.books.table.title'),
       dataIndex: 'title',
       key: 'title',
       sorter: (a, b) => a.title.localeCompare(b.title),
@@ -323,7 +325,7 @@ const handleSaveEdit = async (record) => {
       },
     },
     {
-      title: 'Автор',
+      title: t('admin.books.table.author'),
       dataIndex: 'author_name',
       key: 'author_name',
       sorter: (a, b) => (a.author_name || '').localeCompare(b.author_name || ''),
@@ -333,7 +335,7 @@ const handleSaveEdit = async (record) => {
           <Form.Item name="author" style={{ margin: 0 }}>
             <Select
               size="small"
-              placeholder="Выберите автора"
+              placeholder={t('admin.books.form.selectAuthor')}
               options={authors.map(author => ({
                 value: author.id,
                 label: author.name
@@ -341,12 +343,12 @@ const handleSaveEdit = async (record) => {
             />
           </Form.Item>
         ) : (
-          text || 'Неизвестен'
+          text || t('admin.books.table.unknown')
         );
       },
     },
     {
-      title: 'Жанр',
+      title: t('admin.books.table.genre'),
       dataIndex: 'genre_name',
       key: 'genre_name',
       sorter: (a, b) => (a.genre_name || '').localeCompare(b.genre_name || ''),
@@ -356,7 +358,7 @@ const handleSaveEdit = async (record) => {
           <Form.Item name="genre" style={{ margin: 0 }}>
             <Select
               size="small"
-              placeholder="Выберите жанр"
+              placeholder={t('admin.books.form.selectGenre')}
               options={genres.map(genre => ({
                 value: genre.id,
                 label: genre.name
@@ -364,12 +366,12 @@ const handleSaveEdit = async (record) => {
             />
           </Form.Item>
         ) : (
-          text || 'Неизвестен'
+          text || t('admin.books.table.unknown')
         );
       },
     },
     {
-      title: 'Год',
+      title: t('admin.books.table.year'),
       dataIndex: 'publication_year',
       key: 'publication_year',
       width: 80,
@@ -386,19 +388,19 @@ const handleSaveEdit = async (record) => {
       },
     },
     {
-      title: 'Файл',
+      title: t('admin.books.table.file'),
       key: 'file',
       width: 80,
       render: (_, record) => (
         record.file_url ? (
-          <Tag color="green">Есть</Tag>
+          <Tag color="green">{t('admin.books.table.hasFile')}</Tag>
         ) : (
-          <Tag color="default">Нет</Tag>
+          <Tag color="default">{t('admin.books.table.noFile')}</Tag>
         )
       ),
     },
     {
-      title: 'Действия',
+      title: t('admin.books.table.actions'),
       key: 'actions',
       width: 150,
       render: (_, record) => {
@@ -407,7 +409,7 @@ const handleSaveEdit = async (record) => {
           <Space size="small">
             {isEditing ? (
               <>
-                <Tooltip title="Сохранить">
+                <Tooltip title={t('admin.books.actions.save')}>
                   <Button 
                     type="text" 
                     icon={<EditOutlined />} 
@@ -416,7 +418,7 @@ const handleSaveEdit = async (record) => {
                     style={{ color: '#52c41a' }}
                   />
                 </Tooltip>
-                <Tooltip title="Отменить">
+                <Tooltip title={t('admin.books.actions.cancel')}>
                   <Button 
                     type="text" 
                     icon={<DeleteOutlined />} 
@@ -428,15 +430,22 @@ const handleSaveEdit = async (record) => {
               </>
             ) : (
               <>
-                <Tooltip title="Просмотр">
+                <Tooltip title={t('admin.books.actions.view')}>
                   <Button 
                     type="text" 
                     icon={<EyeOutlined />} 
                     size="small"
-                    onClick={() => window.open(`/books/${record.id}`, '_blank')}
+                    onClick={() => {
+                      localStorage.setItem('fromAdminBooks', 'true');
+                      // Открываем в новой вкладке с передачей состояния
+                      const newWindow = window.open(`/books/${record.id}?from=admin`, '_blank');
+                      if (newWindow) {
+                        newWindow.focus();
+                      }
+                    }}
                   />
                 </Tooltip>
-                <Tooltip title="Редактировать">
+                <Tooltip title={t('admin.books.actions.edit')}>
                   <Button 
                     type="text" 
                     icon={<EditOutlined />} 
@@ -445,13 +454,13 @@ const handleSaveEdit = async (record) => {
                   />
                 </Tooltip>
                 <Popconfirm
-                  title="Удалить книгу?"
-                  description="Это действие нельзя отменить"
+                  title={t('admin.books.actions.deleteConfirm')}
+                  description={t('admin.books.actions.deleteDescription')}
                   onConfirm={() => handleDeleteBookFromTable(record.id)}
-                  okText="Да"
-                  cancelText="Нет"
+                  okText={t('admin.books.actions.yes')}
+                  cancelText={t('admin.books.actions.no')}
                 >
-                  <Tooltip title="Удалить">
+                  <Tooltip title={t('admin.books.actions.delete')}>
                     <Button 
                       type="text" 
                       icon={<DeleteOutlined />} 
@@ -511,7 +520,7 @@ const handleSaveEdit = async (record) => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            Управление книгами
+            {t('admin.books.title')}
           </h1>
         </div>
 
@@ -529,7 +538,7 @@ const handleSaveEdit = async (record) => {
               boxShadow: '0 4px 16px rgba(0, 128, 128, 0.3)'
             }}
           >
-            Добавить книгу
+            {t('admin.books.addBook')}
           </Button>
           <Link to="/catalog">
             <Button 
@@ -544,7 +553,7 @@ const handleSaveEdit = async (record) => {
                 backdropFilter: 'blur(10px)'
               }}
             >
-              Перейти в каталог
+              {t('admin.books.goToCatalog')}
             </Button>
           </Link>
         </div>
@@ -569,7 +578,7 @@ const handleSaveEdit = async (record) => {
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} из ${total} книг`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} ${t('admin.books.table.of')} ${total} ${t('admin.books.table.books')}`,
                 pageSizeOptions: ['10', '20', '50', '100']
               }}
               scroll={{ x: 800 }}
@@ -582,35 +591,35 @@ const handleSaveEdit = async (record) => {
         </div>
 
       <Modal
-        title={editingBook ? "Редактировать книгу" : "Добавить книгу"}
+        title={editingBook ? t('admin.books.modal.editTitle') : t('admin.books.modal.addTitle')}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={() => {
           setIsModalOpen(false);
           setEditingBook(null);
         }}
-        okText={editingBook ? "Сохранить" : "Добавить"}
-        cancelText="Отмена"
+        okText={editingBook ? t('admin.books.modal.save') : t('admin.books.modal.add')}
+        cancelText={t('admin.books.modal.cancel')}
         confirmLoading={loading}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="Название"
+            label={t('admin.books.form.title')}
             name="title"
-            rules={[{ required: true, message: 'Введите название книги!' }]}
+            rules={[{ required: true, message: t('admin.books.form.titleRequired') }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Автор"
+            label={t('admin.books.form.author')}
             name="author"
-            rules={[{ required: true, message: 'Выберите или создайте автора!' }]}
+            rules={[{ required: true, message: t('admin.books.form.authorRequired') }]}
           >
             <Space.Compact style={{ width: '100%' }}>
               {!isCreatingAuthor ? (
                 <>
                   <Select
-                    placeholder="Выберите автора"
+                    placeholder={t('admin.books.form.selectAuthor')}
                     style={{ flex: 1 }}
                     options={authors.map(author => ({
                       value: author.id,
@@ -620,41 +629,41 @@ const handleSaveEdit = async (record) => {
                   <Button 
                     icon={<PlusOutlined />} 
                     onClick={() => setIsCreatingAuthor(true)}
-                    title="Создать нового автора"
+                    title={t('admin.books.form.createAuthor')}
                   />
                 </>
               ) : (
                 <>
                   <Input
-                    placeholder="Введите имя автора"
+                    placeholder={t('admin.books.form.enterAuthorName')}
                     value={newAuthorName}
                     onChange={(e) => setNewAuthorName(e.target.value)}
                     onPressEnter={handleCreateAuthor}
                     style={{ flex: 1 }}
                   />
                   <Button type="primary" onClick={handleCreateAuthor}>
-                    Создать
+                    {t('admin.books.form.create')}
                   </Button>
                   <Button onClick={() => {
                     setIsCreatingAuthor(false);
                     setNewAuthorName('');
                   }}>
-                    Отмена
+                    {t('admin.books.form.cancel')}
                   </Button>
                 </>
               )}
             </Space.Compact>
           </Form.Item>
           <Form.Item
-            label="Жанр"
+            label={t('admin.books.form.genre')}
             name="genre"
-            rules={[{ required: true, message: 'Выберите или создайте жанр!' }]}
+            rules={[{ required: true, message: t('admin.books.form.genreRequired') }]}
           >
             <Space.Compact style={{ width: '100%' }}>
               {!isCreatingGenre ? (
                 <>
                   <Select
-                    placeholder="Выберите жанр"
+                    placeholder={t('admin.books.form.selectGenre')}
                     style={{ flex: 1 }}
                     options={genres.map(genre => ({
                       value: genre.id,
@@ -664,47 +673,47 @@ const handleSaveEdit = async (record) => {
                   <Button 
                     icon={<PlusOutlined />} 
                     onClick={() => setIsCreatingGenre(true)}
-                    title="Создать новый жанр"
+                    title={t('admin.books.form.createGenre')}
                   />
                 </>
               ) : (
                 <>
                   <Input
-                    placeholder="Введите название жанра"
+                    placeholder={t('admin.books.form.enterGenreName')}
                     value={newGenreName}
                     onChange={(e) => setNewGenreName(e.target.value)}
                     onPressEnter={handleCreateGenre}
                     style={{ flex: 1 }}
                   />
                   <Button type="primary" onClick={handleCreateGenre}>
-                    Создать
+                    {t('admin.books.form.create')}
                   </Button>
                   <Button onClick={() => {
                     setIsCreatingGenre(false);
                     setNewGenreName('');
                   }}>
-                    Отмена
+                    {t('admin.books.form.cancel')}
                   </Button>
                 </>
               )}
             </Space.Compact>
           </Form.Item>
           <Form.Item
-            label="Год публикации"
+            label={t('admin.books.form.publicationYear')}
             name="publication_year"
-            rules={[{ required: true, message: 'Введите год публикации!' }]}
+            rules={[{ required: true, message: t('admin.books.form.publicationYearRequired') }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
-            label="Описание"
+            label={t('admin.books.form.description')}
             name="description"
           >
             <Input.TextArea rows={3} />
           </Form.Item>
           
           <Form.Item
-            label="Файл книги"
+            label={t('admin.books.form.bookFile')}
             name="file"
           >
             <Upload
@@ -715,17 +724,17 @@ const handleSaveEdit = async (record) => {
               maxCount={1}
             >
               <Button icon={<UploadOutlined />}>
-                {editingBook ? 'Заменить файл книги' : 'Выберите файл книги'}
+                {editingBook ? t('admin.books.form.replaceBookFile') : t('admin.books.form.selectBookFile')}
               </Button>
             </Upload>
             <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.45)', marginTop: '4px' }}>
-              Поддерживаемые форматы: TXT, PDF, EPUB, FB2
-              {editingBook && !fileList.length && ' (текущий файл будет сохранен)'}
+              {t('admin.books.form.supportedFormats')}: TXT, PDF, EPUB, FB2
+              {editingBook && !fileList.length && ` (${t('admin.books.form.currentFileWillBeSaved')})`}
             </div>
           </Form.Item>
           
           <Form.Item
-            label="Обложка книги"
+            label={t('admin.books.form.bookCover')}
             name="cover_image"
           >
             <Upload
@@ -739,13 +748,13 @@ const handleSaveEdit = async (record) => {
               <div>
                 <PlusOutlined />
                 <div style={{ marginTop: 8 }}>
-                  {editingBook ? 'Заменить обложку' : 'Загрузить обложку'}
+                  {editingBook ? t('admin.books.form.replaceCover') : t('admin.books.form.uploadCover')}
                 </div>
               </div>
             </Upload>
             <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.45)', marginTop: '4px' }}>
-              Поддерживаемые форматы: JPG, PNG, GIF, WEBP
-              {editingBook && !coverList.length && ' (текущая обложка будет сохранена)'}
+              {t('admin.books.form.supportedImageFormats')}: JPG, PNG, GIF, WEBP
+              {editingBook && !coverList.length && ` (${t('admin.books.form.currentCoverWillBeSaved')})`}
             </div>
           </Form.Item>
         </Form>

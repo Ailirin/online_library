@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message, Spin, Card, Row, Col, Typography, Tag, Space, Avatar, Modal, Tabs, Statistic, List, Badge, Divider, Upload, Switch, Select } from 'antd';
-import { UserOutlined, MailOutlined, CrownOutlined, SettingOutlined, EditOutlined, SaveOutlined, BookOutlined, HeartOutlined, HistoryOutlined, BellOutlined, SecurityScanOutlined, UploadOutlined, CameraOutlined } from '@ant-design/icons';
+import { Form, Input, Button, message, Spin, Card, Row, Col, Typography, Tag, Space, Avatar, Modal, Statistic, Upload } from 'antd';
+import { UserOutlined, MailOutlined, CrownOutlined, EditOutlined, SaveOutlined, HeartOutlined, UploadOutlined, CameraOutlined, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
 import { useApp } from '../context/AppContext';
@@ -10,24 +10,31 @@ const { Title, Paragraph } = Typography;
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { state } = useApp();
+  const { state, actions } = useApp();
   const { t, language, changeLanguage } = useTranslation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editForm] = Form.useForm();
   const [userStats, setUserStats] = useState({
-    booksRead: 0,
-    favoriteBooks: 0,
-    lastActivity: null
+    favoriteBooks: 0
   });
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    theme: 'light',
-    language: language
-  });
+
+  const updateUserStats = async () => {
+    try {
+      const statsResponse = await apiService.getUserStats();
+      console.log('Обновляем статистику:', statsResponse);
+      
+      const stats = {
+        favoriteBooks: statsResponse.books_favorited || statsResponse.booksFavorited || statsResponse.favoriteBooks || 0
+      };
+      
+      setUserStats(stats);
+    } catch (error) {
+      console.error('Ошибка обновления статистики:', error);
+    }
+  };
 
   useEffect(() => {
     // Проверяем, авторизован ли пользователь
@@ -37,40 +44,121 @@ const ProfilePage = () => {
       return;
     }
 
+    // Инициализируем токен в API сервисе
+    const accessToken = localStorage.getItem('access');
+    console.log('Токен из localStorage:', accessToken ? 'есть' : 'нет');
+    if (accessToken) {
+      apiService.setToken(accessToken);
+      console.log('Токен установлен в API сервисе');
+    } else {
+      console.log('Токен не найден в localStorage');
+    }
+
     const fetchProfile = async () => {
       try {
-        const response = await apiService.request('/auth/profile/');
-        setUser({
-          name: response.username,
-          email: response.email,
-          firstName: response.first_name || '',
-          lastName: response.last_name || '',
-          roles: [
-            response.is_superuser ? 'admin' : null,
-            'user'
-          ].filter(Boolean)
-        });
-        
+        // Используем данные из глобального состояния, если они есть
+        if (state.user) {
+          const userData = {
+            name: state.user.username,
+            email: state.user.email,
+            firstName: state.user.first_name || '',
+            lastName: state.user.last_name || '',
+            roles: [
+              state.user.is_superuser ? 'admin' : null,
+              'user'
+            ].filter(Boolean)
+          };
+          setUser(userData);
+        } else {
+          // Загружаем основную информацию пользователя
+          const response = await apiService.getProfile();
+          console.log('Профиль от сервера:', response);
+          console.log('Тип профиля:', typeof response);
+          console.log('Ключи профиля:', Object.keys(response || {}));
+          
+          const userData = {
+            name: response.username,
+            email: response.email,
+            firstName: response.first_name || '',
+            lastName: response.last_name || '',
+            roles: [
+              response.is_superuser ? 'admin' : null,
+              'user'
+            ].filter(Boolean)
+          };
+          
+          console.log('Форматированные данные профиля:', userData);
+          
+          setUser(userData);
+        }
+
         // Загружаем статистику пользователя
         try {
-          const statsResponse = await apiService.request('/user-stats/');
-          setUserStats({
-            booksRead: statsResponse.books_read || 0,
-            favoriteBooks: statsResponse.favorite_books || 0,
-            lastActivity: statsResponse.last_activity || null
-          });
+          const statsResponse = await apiService.getUserStats();
+          console.log('Статистика от сервера:', statsResponse);
+          console.log('Тип ответа:', typeof statsResponse);
+          console.log('Ключи ответа:', Object.keys(statsResponse || {}));
+          
+          const stats = {
+            favoriteBooks: statsResponse.books_favorited || statsResponse.booksFavorited || statsResponse.favoriteBooks || 0
+          };
+          
+          console.log('Устанавливаем статистику:', stats);
+          setUserStats(stats);
         } catch (statsError) {
-          console.log('Статистика недоступна');
+          console.error('Ошибка загрузки статистики:', statsError);
+          console.error('Тип ошибки:', typeof statsError);
+          console.error('Сообщение ошибки:', statsError.message);
+          console.error('Стек ошибки:', statsError.stack);
+          
+          if (statsError.message.includes('401')) {
+            message.error('Ошибка авторизации. Пожалуйста, войдите в систему заново.');
+            navigate('/login');
+            return;
+          }
+          
+          if (statsError.message.includes('404')) {
+            console.log('API endpoint не найден, используем значения по умолчанию');
+          }
+          
+          if (statsError.message.includes('500')) {
+            console.log('Ошибка сервера, используем значения по умолчанию');
+          }
+          
+          console.log('Используем значения по умолчанию');
+          setUserStats({
+            favoriteBooks: 0
+          });
         }
+
       } catch (error) {
         console.error('Ошибка загрузки профиля:', error);
+        if (error.message.includes('401')) {
+          message.error('Ошибка авторизации. Пожалуйста, войдите в систему заново.');
+          navigate('/login');
+          return;
+        }
         message.error('Ошибка загрузки профиля');
       } finally {
         setLoading(false);
       }
     };
     fetchProfile();
-  }, [state.isAuthenticated, navigate]);
+  }, [state.isAuthenticated, state.user, navigate, language]);
+
+  // Слушаем изменения в отзывах для обновления статистики
+  useEffect(() => {
+    const handleReviewChange = () => {
+      updateUserStats();
+    };
+
+    // Добавляем слушатель событий
+    window.addEventListener('reviewChanged', handleReviewChange);
+    
+    return () => {
+      window.removeEventListener('reviewChanged', handleReviewChange);
+    };
+  }, []);
 
   const hasRole = (role) => user && user.roles.includes(role);
 
@@ -86,65 +174,77 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async (values) => {
     try {
-      const response = await apiService.request('/auth/profile/', {
-        method: 'PUT',
-        body: JSON.stringify(values)
-      });
+      console.log('Сохраняем профиль:', values);
       
-      setUser(prev => ({
-        ...prev,
-        name: response.username,
-        email: response.email,
-        firstName: response.first_name || '',
-        lastName: response.last_name || ''
-      }));
+      // Преобразуем поля для Django
+      const profileData = {
+        username: values.username,
+        email: values.email,
+        first_name: values.firstName,
+        last_name: values.lastName
+      };
+      
+      console.log('Данные для отправки:', profileData);
+      
+      // Обновляем основную информацию пользователя
+      const response = await apiService.updateProfile(profileData);
+      console.log('Ответ сервера:', response);
+      
+      // Обновляем локальное состояние пользователя
+      const updatedUser = {
+        ...user,
+        name: response.username || values.username,
+        email: response.email || values.email,
+        firstName: response.first_name || values.firstName || '',
+        lastName: response.last_name || values.lastName || ''
+      };
+      setUser(updatedUser);
+      
+      // Обновляем глобальное состояние
+      const globalUserData = {
+        ...state.user,
+        username: response.username || values.username,
+        email: response.email || values.email,
+        first_name: response.first_name || values.firstName || '',
+        last_name: response.last_name || values.lastName || ''
+      };
+      
+      // Обновляем глобальное состояние
+      actions.updateProfile(globalUserData);
       
       setEditModalVisible(false);
       message.success('Профиль успешно обновлен!');
     } catch (error) {
-      message.error('Ошибка при обновлении профиля');
+      console.error('Ошибка при обновлении профиля:', error);
+      console.error('Детали ошибки:', error.response || error.message);
+      
+      if (error.message.includes('401')) {
+        message.error('Ошибка авторизации. Пожалуйста, войдите в систему заново.');
+        navigate('/login');
+        return;
+      }
+      
+      // Показываем более детальную ошибку
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Ошибка при обновлении профиля';
+      message.error(`Ошибка: ${errorMessage}`);
     }
   };
 
   const handleAvatarUpload = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      
-      const response = await apiService.request('/auth/profile/avatar/', {
-        method: 'POST',
-        headers: apiService.getHeadersWithoutContentType(),
-        body: formData
-      });
-      
-      setAvatarUrl(response.avatar_url);
+      const response = await apiService.uploadAvatar(file);
+      setAvatarUrl(response.avatar);
       message.success('Аватар успешно загружен!');
     } catch (error) {
+      console.error('Ошибка загрузки аватара:', error);
       message.error('Ошибка при загрузке аватара');
     }
     return false; // Предотвращаем автоматическую загрузку
   };
 
-  const handleSettingsChange = async (key, value) => {
-    try {
-      const newSettings = { ...settings, [key]: value };
-      setSettings(newSettings);
-      
-      // Если меняется язык, применяем его сразу
-      if (key === 'language') {
-        changeLanguage(value);
-      }
-      
-      await apiService.request('/auth/profile/settings/', {
-        method: 'PUT',
-        body: JSON.stringify(newSettings)
-      });
-      
-      message.success(t('settings.saved'));
-    } catch (error) {
-      message.error(t('settings.error'));
-    }
-  };
 
   if (loading) {
     return (
@@ -208,355 +308,124 @@ const ProfilePage = () => {
         animation: 'float 20s ease-in-out infinite'
       }} />
       
-      <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto' }}>
         {/* Заголовок */}
         <div style={{
-          textAlign: 'center',
-          marginBottom: '48px',
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
-          borderRadius: '32px',
-          padding: '40px',
+          borderRadius: '24px',
+          padding: '24px',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          marginBottom: '32px'
         }}>
-          <Title level={1} style={{ 
-            color: 'white', 
-            fontSize: '3rem', 
-            fontWeight: 800,
-            marginBottom: '16px',
-            background: 'linear-gradient(45deg, #fff, #f0f0f0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
+          <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center' }}>
             <UserOutlined /> {t('profile.title')}
           </Title>
-          <Paragraph style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.2rem' }}>
-            {t('profile.manage')}
-          </Paragraph>
         </div>
 
-        <Card style={{
+        <Row gutter={[24, 24]}>
+          {/* Основная информация */}
+          <Col xs={24} lg={16}>
+            <Card 
+              style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           borderRadius: '24px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          marginBottom: '32px'
-        }}>
-          <Tabs
-            defaultActiveKey="profile"
-            items={[
-              {
-                key: 'profile',
-                label: (
-                  <span style={{ color: 'white' }}>
-                    <UserOutlined /> {t('tabs.profile')}
-                  </span>
-                ),
-                children: (
-                  <Row gutter={[32, 32]}>
-                    {/* Информация о пользователе */}
-                    <Col xs={24} lg={12}>
-                      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
-                          <Avatar 
-                            size={100} 
-                            src={avatarUrl}
-                            icon={<UserOutlined />}
-                            style={{ 
-                              background: avatarUrl ? 'transparent' : 'linear-gradient(45deg, #008080, #20b2aa)',
-                              marginBottom: '16px'
-                            }}
-                          />
-                          <Upload
-                            beforeUpload={handleAvatarUpload}
-                            showUploadList={false}
-                            accept="image/*"
-                          >
-                            <Button
-                              type="primary"
-                              shape="circle"
-                              icon={<CameraOutlined />}
-                              size="small"
-                              style={{
-                                position: 'absolute',
-                                bottom: '10px',
-                                right: '10px',
-                                background: 'rgba(0, 128, 128, 0.8)',
-                                border: 'none'
-                              }}
-                            />
-                          </Upload>
-                        </div>
-                        <Title level={2} style={{ color: 'white', marginBottom: '8px' }}>
-                          {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name}
-                        </Title>
-                        <Space wrap>
-                          {user.roles.map(role => (
-                            <Tag 
-                              key={role}
-                              color={role === 'admin' ? 'red' : 'blue'}
-                              style={{ fontSize: '14px', padding: '4px 12px' }}
-                            >
-                              {role === 'admin' ? <CrownOutlined /> : <UserOutlined />} 
-                              {role === 'admin' ? 'Администратор' : 'Пользователь'}
-                            </Tag>
-                          ))}
-                        </Space>
-                      </div>
-                      
-                      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'white' }}>
-                          <MailOutlined style={{ fontSize: '18px', color: 'rgba(255, 255, 255, 0.8)' }} />
-                          <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{user.email}</span>
-                        </div>
-                        
-                        <Button 
-                          type="primary"
-                          icon={<EditOutlined />}
-                          onClick={handleEditProfile}
-                          style={{
-                            background: 'linear-gradient(45deg, #008080, #20b2aa)',
-                            border: 'none',
-                            borderRadius: '20px',
-                            height: '40px',
-                            fontWeight: 600
-                          }}
-                        >
-                          {t('profile.edit')}
-                        </Button>
-                      </Space>
-                    </Col>
-
-                    {/* Статистика */}
-                    <Col xs={24} lg={12}>
-                      <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                        <BookOutlined /> {t('stats.booksRead')}
-                      </Title>
-                      <Row gutter={[16, 16]}>
-                        <Col span={12}>
-                          <Statistic
-                            title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('stats.booksRead')}</span>}
-                            value={userStats.booksRead}
-                            valueStyle={{ color: '#fff' }}
-                            prefix={<BookOutlined />}
-                          />
-                        </Col>
-                        <Col span={12}>
-                          <Statistic
-                            title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('stats.favoriteBooks')}</span>}
-                            value={userStats.favoriteBooks}
-                            valueStyle={{ color: '#fff' }}
-                            prefix={<HeartOutlined />}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                )
-              },
-              {
-                key: 'activity',
-                label: (
-                  <span style={{ color: 'white' }}>
-                    <HistoryOutlined /> {t('tabs.activity')}
-                  </span>
-                ),
-                children: (
-                  <div style={{ color: 'white' }}>
-                    <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                      <HistoryOutlined /> История активности
-                    </Title>
-                    <List
-                      dataSource={[
-                        { title: 'Последний вход в систему', description: 'Сегодня в 14:30' },
-                        { title: 'Просмотр каталога', description: '2 часа назад' },
-                        { title: 'Добавление в избранное', description: 'Вчера в 16:45' }
-                      ]}
-                      renderItem={item => (
-                        <List.Item style={{ color: 'white' }}>
-                          <List.Item.Meta
-                            title={<span style={{ color: 'white' }}>{item.title}</span>}
-                            description={<span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{item.description}</span>}
-                          />
-                        </List.Item>
-                      )}
-                    />
+                height: '100%'
+              }}
+            >
+              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
+                Основная информация
+              </Title>
+              
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <div>
+                  <Title level={4} style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '8px' }}>
+                    Имя пользователя
+                  </Title>
+                  <Paragraph style={{ color: 'white', fontSize: '18px', margin: 0 }}>
+                  {user.name}
+                  </Paragraph>
+                </div>
+                
+                <div>
+                  <Title level={4} style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '8px' }}>
+                    <MailOutlined /> Email
+                </Title>
+                  <Paragraph style={{ color: 'white', fontSize: '16px', margin: 0 }}>
+                    {user.email || 'Не указан'}
+                  </Paragraph>
                   </div>
-                )
-              },
-              ...(hasRole('admin') ? [{
-                key: 'admin',
-                label: (
-                  <span style={{ color: 'white' }}>
-                    <CrownOutlined /> {t('tabs.admin')}
-                  </span>
-                ),
-                children: (
-                  <div style={{ color: 'white' }}>
-                    <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                      <CrownOutlined /> Административные функции
-                    </Title>
-                    <Row gutter={[16, 16]}>
-                      <Col xs={24} sm={12} md={8}>
-                        <Card style={{
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '16px',
-                          textAlign: 'center'
-                        }}>
-                          <BookOutlined style={{ fontSize: '32px', color: 'white', marginBottom: '16px' }} />
-                          <Title level={4} style={{ color: 'white' }}>Управление книгами</Title>
-                          <Button 
-                            type="primary"
-                            href="/admin/books"
-                            style={{
-                              background: 'linear-gradient(45deg, #008080, #20b2aa)',
-                              border: 'none',
-                              borderRadius: '20px'
-                            }}
-                          >
-                            Перейти
-                          </Button>
-                        </Card>
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <Card style={{
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '16px',
-                          textAlign: 'center'
-                        }}>
-                          <UserOutlined style={{ fontSize: '32px', color: 'white', marginBottom: '16px' }} />
-                          <Title level={4} style={{ color: 'white' }}>Управление пользователями</Title>
-                          <Button 
-                            type="primary"
-                            href="/admin/users"
-                            style={{
-                              background: 'linear-gradient(45deg, #008080, #20b2aa)',
-                              border: 'none',
-                              borderRadius: '20px'
-                            }}
-                          >
-                            Перейти
-                          </Button>
-                        </Card>
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <Card style={{
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '16px',
-                          textAlign: 'center'
-                        }}>
-                          <SettingOutlined style={{ fontSize: '32px', color: 'white', marginBottom: '16px' }} />
-                          <Title level={4} style={{ color: 'white' }}>Настройки системы</Title>
-                          <Button 
-                            type="primary"
-                            href="/admin/settings"
-                            style={{
-                              background: 'linear-gradient(45deg, #008080, #20b2aa)',
-                              border: 'none',
-                              borderRadius: '20px'
-                            }}
-                          >
-                            Перейти
-                          </Button>
-                        </Card>
-                      </Col>
-                    </Row>
-                  </div>
-                )
-              }] : []),
-              {
-                key: 'settings',
-                label: (
-                  <span style={{ color: 'white' }}>
-                    <SettingOutlined /> {t('tabs.settings')}
-                  </span>
-                ),
-                children: (
-                  <div style={{ color: 'white' }}>
-                    <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                      <SettingOutlined /> Настройки профиля
-                    </Title>
+                
+                <div>
+                  <Title level={4} style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '8px' }}>
+                    <CrownOutlined /> Роль и статус
+                  </Title>
+                  <Space size="middle">
+                    {user.roles.includes('admin') ? (
+                      <Tag color="red" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                        Администратор
+                      </Tag>
+                    ) : (
+                      <Tag color="green" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                        Пользователь
+                      </Tag>
+                    )}
                     
-                    <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                      <Card style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '16px'
-                      }}>
-                        <Title level={4} style={{ color: 'white', marginBottom: '16px' }}>
-                          <BellOutlined /> Уведомления
-                        </Title>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{t('settings.emailNotifications')}</span>
-                          <Switch 
-                            checked={settings.emailNotifications}
-                            onChange={(checked) => handleSettingsChange('emailNotifications', checked)}
-                          />
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{t('settings.pushNotifications')}</span>
-                          <Switch 
-                            checked={settings.pushNotifications}
-                            onChange={(checked) => handleSettingsChange('pushNotifications', checked)}
-                          />
-                        </div>
-                      </Card>
-                      
-                      <Card style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '16px'
-                      }}>
-                        <Title level={4} style={{ color: 'white', marginBottom: '16px' }}>
-                          <SecurityScanOutlined /> Внешний вид
-                        </Title>
-                        
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>{t('settings.theme')}</div>
-                          <Select
-                            value={settings.theme}
-                            onChange={(value) => handleSettingsChange('theme', value)}
-                            style={{ width: '100%' }}
-                            options={[
-                              { value: 'light', label: t('settings.theme.light') },
-                              { value: 'dark', label: t('settings.theme.dark') },
-                              { value: 'auto', label: t('settings.theme.auto') }
-                            ]}
-                          />
-                        </div>
-                        
-                        <div>
-                          <div style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>
-                            {t('settings.language')} 
-                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
-                              (изменяется в хедере)
-                            </span>
-                          </div>
-                          <div style={{ 
-                            background: 'rgba(255, 255, 255, 0.1)', 
-                            padding: '12px', 
-                            borderRadius: '8px',
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            fontSize: '14px'
-                          }}>
-                            🌐 Язык интерфейса можно изменить в правом верхнем углу страницы
-                          </div>
-                        </div>
-                      </Card>
-                    </Space>
-                  </div>
-                )
-              }
-            ]}
-          />
-        </Card>
+                    <Tag color="green" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                      Активен
+                    </Tag>
+                </Space>
+              </div>
+              </Space>
+            </Card>
+            </Col>
+
+          {/* Статистика */}
+            <Col xs={24} lg={8}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '24px',
+                height: '100%'
+              }}
+            >
+              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
+                Статистика
+                </Title>
+              
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Statistic
+                  title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Избранных книг</span>}
+                  value={userStats.favoriteBooks}
+                  valueStyle={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}
+                />
+                
+                <Button 
+                  type="primary"
+                  icon={<StarOutlined />}
+                  onClick={() => navigate('/reviews')}
+                  block
+                  style={{
+                    background: 'linear-gradient(45deg, #008080, #20b2aa)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    height: '48px',
+                    fontWeight: 600,
+                    boxShadow: '0 4px 16px rgba(0, 128, 128, 0.3)'
+                  }}
+                >
+                  Мои отзывы
+                </Button>
+              </Space>
+            </Card>
+            </Col>
+          </Row>
+
       </div>
 
       {/* Модальное окно редактирования профиля */}
@@ -569,15 +438,6 @@ const ProfilePage = () => {
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
         footer={null}
-        style={{
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)'
-        }}
-        bodyStyle={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '24px'
-        }}
         width={500}
       >
         <Form
@@ -656,6 +516,11 @@ const ProfilePage = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .ant-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
         }
       `}</style>
     </div>

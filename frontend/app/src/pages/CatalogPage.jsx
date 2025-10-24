@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Card, Row, Col, Typography, Space, Input } from 'antd';
-import { SearchOutlined, BookOutlined, ArrowLeftOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { SearchOutlined, BookOutlined, ArrowLeftOutlined, DownloadOutlined, EyeOutlined, HeartOutlined, StarOutlined } from '@ant-design/icons';
 import apiService from '../services/api';
 import OpenLibrarySearch from '../components/OpenLibrarySearch';
 import BookModal from '../components/BookModal';
@@ -15,17 +15,50 @@ function CatalogPage() {
   const [books, setBooks] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   useEffect(() => {
-  apiService.getBooks()
-    .then(res => setBooks(res.results || res))
-    .catch(err => {
+    loadBooks();
+    loadFavorites();
+  }, []);
+
+  const loadBooks = async () => {
+    try {
+      const res = await apiService.getBooks();
+      setBooks(res.results || res);
+    } catch (err) {
       setBooks([]);
-      console.error(err);
-    });
-}, []);
+      console.error('Ошибка загрузки книг:', err);
+    }
+  };
+
+  const loadFavorites = async () => {
+    try {
+      const favoritesData = await apiService.getFavorites();
+      const favoriteIds = favoritesData.map(fav => fav.book.id);
+      setFavorites(favoriteIds);
+    } catch (err) {
+      console.error('Ошибка загрузки избранного:', err);
+      setFavorites([]);
+    }
+  };
+
+  const toggleFavorite = async (bookId, e) => {
+    e.stopPropagation();
+    try {
+      await apiService.toggleFavorite(bookId);
+      // Обновляем локальное состояние
+      if (favorites.includes(bookId)) {
+        setFavorites(favorites.filter(id => id !== bookId));
+      } else {
+        setFavorites([...favorites, bookId]);
+      }
+    } catch (err) {
+      console.error('Ошибка изменения избранного:', err);
+    }
+  };
 
   return (
     <div style={{ 
@@ -70,27 +103,18 @@ function CatalogPage() {
 
         {/* Заголовок */}
         <div style={{
-          textAlign: 'center',
-          marginBottom: '48px',
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
-          borderRadius: '32px',
-          padding: '40px',
+          borderRadius: '24px',
+          padding: '24px',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          marginBottom: '32px'
         }}>
-          <Title level={1} style={{ 
-            color: 'white', 
-            fontSize: '3rem', 
-            fontWeight: 800,
-            marginBottom: '16px',
-            background: 'linear-gradient(45deg, #fff, #f0f0f0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
+          <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center' }}>
             <BookOutlined /> {t('books.title')}
           </Title>
-          <Paragraph style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.2rem' }}>
+          <Paragraph style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1rem', textAlign: 'center', margin: '8px 0 0 0' }}>
             {t('books.subtitle')}
           </Paragraph>
         </div>
@@ -313,6 +337,55 @@ function CatalogPage() {
                         </Button>
                       </a>
                     )}
+                    <Button 
+                      type="link" 
+                      icon={<HeartOutlined />}
+                      onClick={(e) => toggleFavorite(book.id, e)}
+                      style={{ 
+                        color: favorites.includes(book.id) ? '#ff4d4f' : '#ff7875',
+                        fontWeight: 600,
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                        transition: 'all 0.3s ease',
+                        padding: '2px 6px',
+                        height: 'auto',
+                        fontSize: '12px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = '#ff4d4f';
+                        e.target.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = favorites.includes(book.id) ? '#ff4d4f' : '#ff7875';
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      {favorites.includes(book.id) ? t('book.removeFromFavorites') : t('book.addToFavorites')}
+                    </Button>
+                    <Link to={`/books/${book.id}#reviews`} onClick={e => e.stopPropagation()}>
+                      <Button 
+                        type="link" 
+                        icon={<StarOutlined />}
+                        style={{ 
+                          color: '#faad14',
+                          fontWeight: 600,
+                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                          transition: 'all 0.3s ease',
+                          padding: '2px 6px',
+                          height: 'auto',
+                          fontSize: '12px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = '#ffc53d';
+                          e.target.style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = '#faad14';
+                          e.target.style.transform = 'scale(1)';
+                        }}
+                      >
+                        Отзыв
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

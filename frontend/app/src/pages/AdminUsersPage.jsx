@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Popconfirm, Tag, message, Modal, Form, Input, Checkbox } from 'antd';
+import { Table, Button, Popconfirm, Tag, message, Modal, Form, Input, Checkbox, Space } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 function AdminUsersPage() {
+  const { t, language } = useTranslation();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [currentLanguage, setCurrentLanguage] = useState(language);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -14,30 +20,38 @@ function AdminUsersPage() {
       const res = await apiService.getUsers();
       setUsers(res.results || res);
     } catch (e) {
-      message.error('Ошибка загрузки пользователей');
+      message.error(t('admin.users.messages.loadError'));
     }
     setLoading(false);
   };
 
   useEffect(() => { fetchUsers(); }, []);
+  
+  useEffect(() => {
+    if (language !== currentLanguage) {
+      setCurrentLanguage(language);
+      // Принудительное обновление компонента при смене языка
+      setUsers([...users]);
+    }
+  }, [language, currentLanguage, users]);
 
   const handleBlock = async (id, isActive) => {
     try {
       await apiService.updateUser(id, { is_active: !isActive });
-      message.success(isActive ? 'Пользователь заблокирован' : 'Пользователь разблокирован');
+      message.success(isActive ? t('admin.users.messages.userBlocked') : t('admin.users.messages.userUnblocked'));
       fetchUsers();
     } catch (e) {
-      message.error('Ошибка при изменении статуса');
+      message.error(t('admin.users.messages.statusChangeError'));
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await apiService.deleteUser(id);
-      message.success('Пользователь удалён');
+      message.success(t('admin.users.messages.userDeleted'));
       fetchUsers();
     } catch (e) {
-      message.error('Ошибка при удалении');
+      message.error(t('admin.users.messages.deleteError'));
     }
   };
 
@@ -50,53 +64,66 @@ function AdminUsersPage() {
     try {
       const values = await form.validateFields();
       await apiService.createUser(values);
-      message.success('Пользователь добавлен');
+      message.success(t('admin.users.messages.userAdded'));
       setIsModalOpen(false);
       fetchUsers();
     } catch (e) {
-      message.error('Ошибка при добавлении пользователя');
+      message.error(t('admin.users.messages.addError'));
     }
   };
 
+  const handleViewProfile = (userId) => {
+    // Открываем профиль пользователя в новом окне или переходим к нему
+    navigate(`/admin/users/${userId}`);
+  };
+
   const columns = [
-    { title: 'Имя пользователя', dataIndex: 'username', key: 'username' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: t('admin.users.table.username'), dataIndex: 'username', key: 'username' },
+    { title: t('admin.users.table.email'), dataIndex: 'email', key: 'email' },
     {
-      title: 'Роль',
+      title: t('admin.users.table.role'),
       dataIndex: 'is_staff',
       key: 'is_staff',
       render: (is_staff, record) =>
-        record.is_superuser ? <Tag color="red">Суперюзер</Tag> :
-        is_staff ? <Tag color="blue">Админ</Tag> :
-        <Tag color="green">Пользователь</Tag>
+        record.is_superuser ? <Tag color="red">{t('admin.users.roles.superuser')}</Tag> :
+        is_staff ? <Tag color="blue">{t('admin.users.roles.admin')}</Tag> :
+        <Tag color="green">{t('admin.users.roles.user')}</Tag>
     },
     {
-      title: 'Статус',
+      title: t('admin.users.table.status'),
       dataIndex: 'is_active',
       key: 'is_active',
       render: is_active =>
-        is_active ? <Tag color="green">Активен</Tag> : <Tag color="volcano">Заблокирован</Tag>
+        is_active ? <Tag color="green">{t('admin.users.status.active')}</Tag> : <Tag color="volcano">{t('admin.users.status.blocked')}</Tag>
     },
     {
-      title: 'Действия',
+      title: t('admin.users.table.actions'),
       key: 'actions',
       render: (_, record) => (
-        <>
+        <Space size="small">
+          <Button 
+            icon={<EyeOutlined />}
+            onClick={() => handleViewProfile(record.id)}
+            type="default"
+            size="small"
+          >
+            {t('admin.users.actions.profile')}
+          </Button>
           <Popconfirm
-            title={record.is_active ? "Заблокировать пользователя?" : "Разблокировать пользователя?"}
+            title={record.is_active ? t('admin.users.actions.blockConfirm') : t('admin.users.actions.unblockConfirm')}
             onConfirm={() => handleBlock(record.id, record.is_active)}
           >
-            <Button danger={!record.is_active} type={record.is_active ? "default" : "primary"}>
-              {record.is_active ? "Заблокировать" : "Разблокировать"}
+            <Button danger={!record.is_active} type={record.is_active ? "default" : "primary"} size="small">
+              {record.is_active ? t('admin.users.actions.block') : t('admin.users.actions.unblock')}
             </Button>
           </Popconfirm>
           <Popconfirm
-            title="Удалить пользователя?"
+            title={t('admin.users.actions.deleteConfirm')}
             onConfirm={() => handleDelete(record.id)}
           >
-            <Button danger style={{ marginLeft: 8 }}>Удалить</Button>
+            <Button danger size="small">{t('admin.users.actions.delete')}</Button>
           </Popconfirm>
-        </>
+        </Space>
       ),
     },
   ];
@@ -144,7 +171,7 @@ function AdminUsersPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            Управление пользователями
+            {t('admin.users.title')}
           </h1>
         </div>
         <Button 
@@ -161,7 +188,7 @@ function AdminUsersPage() {
           }} 
           onClick={handleAddUser}
         >
-          Добавить пользователя
+          {t('admin.users.addUser')}
         </Button>
         
         <div style={{
@@ -184,43 +211,43 @@ function AdminUsersPage() {
           />
         </div>
  <Modal
-        title="Добавить пользователя"
+        title={t('admin.users.modal.addUser')}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={() => setIsModalOpen(false)}
-        okText="Добавить"
-        cancelText="Отмена"
+        okText={t('admin.users.modal.add')}
+        cancelText={t('admin.users.modal.cancel')}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="Имя пользователя"
+            label={t('admin.users.form.username')}
             name="username"
-            rules={[{ required: true, message: 'Введите имя пользователя!' }]}
+            rules={[{ required: true, message: t('admin.users.form.usernameRequired') }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Email"
+            label={t('admin.users.form.email')}
             name="email"
             rules={[
-              { type: 'email', message: 'Некорректный email!' },
-              { required: true, message: 'Введите email!' }
+              { type: 'email', message: t('admin.users.form.emailInvalid') },
+              { required: true, message: t('admin.users.form.emailRequired') }
             ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Пароль"
+            label={t('admin.users.form.password')}
             name="password"
-            rules={[{ required: true, message: 'Введите пароль!' }]}
+            rules={[{ required: true, message: t('admin.users.form.passwordRequired') }]}
           >
             <Input.Password />
           </Form.Item>
           <Form.Item name="is_staff" valuePropName="checked">
-            <Checkbox>Админ</Checkbox>
+            <Checkbox>{t('admin.users.form.admin')}</Checkbox>
           </Form.Item>
           <Form.Item name="is_superuser" valuePropName="checked">
-            <Checkbox>Суперюзер</Checkbox>
+            <Checkbox>{t('admin.users.form.superuser')}</Checkbox>
           </Form.Item>
         </Form>
       </Modal>

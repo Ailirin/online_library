@@ -147,6 +147,11 @@ export const AppProvider = ({ children }) => {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       dispatch({ type: 'LOGOUT' });
+      // Перенаправляем на главную страницу после выхода
+      window.location.href = '/';
+    },
+    updateProfile: (profileData) => {
+      dispatch({ type: 'SET_PROFILE', payload: profileData });
     },
     // ...остальные actions (loadBooks и т.д.)
   };

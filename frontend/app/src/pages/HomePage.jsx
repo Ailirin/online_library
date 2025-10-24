@@ -32,25 +32,25 @@ const HomePage = () => {
       <div style={{ 
         position: 'relative', 
         zIndex: 2, 
-        padding: '120px 20px 80px',
+        padding: '80px 20px 60px',
         width: '100%'
       }}>
         {/* Hero секция */}
         <div style={{ 
           textAlign: 'center', 
-          marginBottom: '100px',
+          marginBottom: '60px',
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
-          borderRadius: '32px',
-          padding: '60px 40px',
+          borderRadius: '24px',
+          padding: '40px 30px',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
         }}>
-          <Title level={1} style={{ 
+          <Title level={2} style={{ 
             color: 'white', 
-            fontSize: '4rem', 
-            fontWeight: 800,
-            marginBottom: '24px',
+            fontSize: '2.5rem', 
+            fontWeight: 700,
+            marginBottom: '16px',
             background: 'linear-gradient(45deg, #fff, #f0f0f0)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -60,18 +60,18 @@ const HomePage = () => {
           </Title>
           <Paragraph style={{ 
             color: 'rgba(255, 255, 255, 0.9)', 
-            fontSize: '1.4rem', 
-            marginBottom: '40px',
-            maxWidth: '600px',
-            margin: '0 auto 40px',
-            lineHeight: 1.6
+            fontSize: '1.1rem', 
+            marginBottom: '30px',
+            maxWidth: '500px',
+            margin: '0 auto 30px',
+            lineHeight: 1.5
           }}>
             {t('home.subtitle')}
           </Paragraph>
         </div>
 
         {/* Особенности */}
-        <Row gutter={[32, 32]} style={{ marginBottom: '80px' }}>
+        <Row gutter={[24, 24]} style={{ marginBottom: '60px' }}>
           <Col xs={24} md={8}>
             <Card 
               style={{
@@ -181,10 +181,10 @@ const HomePage = () => {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
         }}>
           <Title level={2} style={{ color: 'white', marginBottom: '24px' }}>
-            Готовы начать своё путешествие в мир книг?
+            {t('home.cta.title')}
           </Title>
           <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '18px' }}>
-            Присоединяйтесь к тысячам читателей уже сегодня
+            {t('home.cta.subtitle')}
           </Paragraph>
         </div>
       </div>

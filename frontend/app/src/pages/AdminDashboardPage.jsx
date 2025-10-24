@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Typography, Statistic, Button, Space, List, Badge, Progress, Timeline } from 'antd';
+import { Card, Row, Col, Typography, Statistic, Button, Space, List } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { 
   BookOutlined, 
   UserOutlined, 
@@ -16,16 +17,18 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import apiService from '../services/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { Title, Paragraph } = Typography;
 
 function AdminDashboardPage() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState({ 
     books: 0, 
     users: 0, 
     recentBooks: 0, 
-    activeUsers: 0,
-    systemHealth: 95
+    activeUsers: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,20 +47,41 @@ function AdminDashboardPage() {
           books: (booksRes.results || booksRes).length,
           users: (usersRes.results || usersRes).length,
           recentBooks: recentBooksRes.count || 0,
-          activeUsers: activeUsersRes.count || 0,
-          systemHealth: 95
+          activeUsers: activeUsersRes.count || 0
         });
 
         // Загружаем последнюю активность
-        const activityRes = await apiService.request('/admin/recent-activity/').catch(() => ({ results: [] }));
-        setRecentActivity(activityRes.results || [
-          { id: 1, action: 'Новая книга добавлена', user: 'Администратор', time: '2 минуты назад', type: 'success' },
-          { id: 2, action: 'Пользователь зарегистрирован', user: 'Система', time: '15 минут назад', type: 'info' },
-          { id: 3, action: 'Книга обновлена', user: 'Администратор', time: '1 час назад', type: 'warning' }
-        ]);
+        try {
+          const reviewsRes = await apiService.getReviews();
+          const recentReviews = (reviewsRes.results || reviewsRes).slice(0, 5);
+          
+          const activityData = recentReviews.map((review, index) => ({
+            id: review.id,
+            action: `Новый отзыв на книгу "${review.book_detail?.title || 'Неизвестная книга'}"`,
+            user: review.user_name || review.user?.username || 'Анонимный пользователь',
+            time: review.created_at ? 
+              new Date(review.created_at).toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 
+              'Недавно',
+            type: 'success'
+          }));
+          
+          setRecentActivity(activityData);
+        } catch (error) {
+          console.error('Ошибка загрузки активности:', error);
+          setRecentActivity([
+            { id: 1, action: 'Новый отзыв на книгу "Золотой ключик"', user: 'Лиза', time: '2 мин назад', type: 'success' },
+            { id: 2, action: 'Пользователь зарегистрировался', user: 'Система', time: '15 мин назад', type: 'info' },
+            { id: 3, action: 'Книга обновлена', user: 'Администратор', time: '1 час назад', type: 'warning' }
+          ]);
+        }
       } catch (e) {
         console.error('Ошибка загрузки статистики:', e);
-        setStats({ books: 0, users: 0, recentBooks: 0, activeUsers: 0, systemHealth: 95 });
+        setStats({ books: 0, users: 0, recentBooks: 0, activeUsers: 0 });
         setRecentActivity([]);
       } finally {
         setLoading(false);
@@ -108,10 +132,10 @@ function AdminDashboardPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            <DashboardOutlined /> Админ-панель
+            <DashboardOutlined /> {t('admin.dashboard')}
           </Title>
           <Paragraph style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.2rem' }}>
-            Добро пожаловать в панель управления библиотекой
+            {t('admin.dashboard.welcome')}
           </Paragraph>
         </div>
 
@@ -132,7 +156,7 @@ function AdminDashboardPage() {
               hoverable
             >
               <Statistic
-                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Всего книг</span>}
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('admin.totalBooks')}</span>}
                 value={stats.books}
                 valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
                 prefix={<BookOutlined style={{ color: '#008080' }} />}
@@ -154,7 +178,7 @@ function AdminDashboardPage() {
               hoverable
             >
               <Statistic
-                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Пользователей</span>}
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('admin.totalUsers')}</span>}
                 value={stats.users}
                 valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
                 prefix={<UserOutlined style={{ color: '#20b2aa' }} />}
@@ -176,7 +200,7 @@ function AdminDashboardPage() {
               hoverable
             >
               <Statistic
-                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Новых книг</span>}
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('admin.newBooks')}</span>}
                 value={stats.recentBooks}
                 valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
                 prefix={<PlusOutlined style={{ color: '#40e0d0' }} />}
@@ -198,7 +222,7 @@ function AdminDashboardPage() {
               hoverable
             >
               <Statistic
-                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Активных</span>}
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('admin.activeUsers')}</span>}
                 value={stats.activeUsers}
                 valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
                 prefix={<TrophyOutlined style={{ color: '#00ced1' }} />}
@@ -207,7 +231,7 @@ function AdminDashboardPage() {
           </Col>
         </Row>
 
-        {/* Быстрые действия и дополнительная информация */}
+        {/* Быстрые действия и недавняя активность */}
         <Row gutter={[24, 24]}>
           {/* Быстрые действия */}
           <Col xs={24} lg={12}>
@@ -221,13 +245,13 @@ function AdminDashboardPage() {
               }}
             >
               <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                <SettingOutlined /> Быстрые действия
+                <SettingOutlined /> {t('admin.quickActions')}
               </Title>
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <Button 
                   type="primary"
                   icon={<PlusOutlined />}
-                  href="/admin/books"
+                  onClick={() => navigate('/admin/books')}
                   style={{
                     background: 'linear-gradient(45deg, #008080, #20b2aa)',
                     border: 'none',
@@ -237,11 +261,11 @@ function AdminDashboardPage() {
                     fontWeight: 600
                   }}
                 >
-                  Добавить новую книгу
+                  {t('admin.addBook')}
                 </Button>
                 <Button 
                   icon={<UserOutlined />}
-                  href="/admin/users"
+                  onClick={() => navigate('/admin/users')}
                   style={{
                     background: 'rgba(255, 255, 255, 0.2)',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -251,11 +275,11 @@ function AdminDashboardPage() {
                     width: '100%'
                   }}
                 >
-                  Управление пользователями
+                  {t('admin.manageUsers')}
                 </Button>
                 <Button 
                   icon={<BarChartOutlined />}
-                  href="/admin/analytics"
+                  onClick={() => navigate('/admin/settings')}
                   style={{
                     background: 'rgba(255, 255, 255, 0.2)',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -265,13 +289,13 @@ function AdminDashboardPage() {
                     width: '100%'
                   }}
                 >
-                  Аналитика и отчеты
+                  {t('admin.systemSettings')}
                 </Button>
               </Space>
             </Card>
           </Col>
 
-          {/* Системная информация */}
+          {/* Недавняя активность */}
           <Col xs={24} lg={12}>
             <Card 
               style={{
@@ -283,77 +307,63 @@ function AdminDashboardPage() {
               }}
             >
               <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                <DashboardOutlined /> Состояние системы
+                <ClockCircleOutlined /> Недавняя активность
               </Title>
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Здоровье системы</span>
-                    <span style={{ color: 'white', fontWeight: 'bold' }}>{stats.systemHealth}%</span>
-                  </div>
-                  <Progress 
-                    percent={stats.systemHealth} 
-                    strokeColor={{
-                      '0%': '#008080',
-                      '100%': '#20b2aa',
+              <List
+                dataSource={recentActivity}
+                renderItem={(activity, index) => (
+                  <List.Item
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      margin: '8px 0',
+                      padding: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)'
                     }}
-                    trailColor="rgba(255, 255, 255, 0.2)"
-                    showInfo={false}
-                  />
-                </div>
-                
-                <div style={{ color: 'white' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                    <span>База данных: Онлайн</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                    <span>API сервер: Работает</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <WarningOutlined style={{ color: '#faad14' }} />
-                    <span>Резервное копирование: Требуется</span>
-                  </div>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Последняя активность */}
-        <Row style={{ marginTop: '32px' }}>
-          <Col span={24}>
-            <Card 
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '24px'
-              }}
-            >
-              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
-                <ClockCircleOutlined /> Последняя активность
-              </Title>
-              <Timeline
-                items={recentActivity.map(activity => ({
-                  color: activity.type === 'success' ? '#52c41a' : 
-                         activity.type === 'warning' ? '#faad14' : '#1890ff',
-                  children: (
-                    <div style={{ color: 'white' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                        {activity.action}
-                      </div>
-                      <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
-                        {activity.user} • {activity.time}
-                      </div>
-                    </div>
-                  )
-                }))}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <div style={{
+                          background: activity.type === 'success' ? '#52c41a' : 
+                                     activity.type === 'warning' ? '#faad14' : '#1890ff',
+                          borderRadius: '50%',
+                          width: '40px',
+                          height: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '16px'
+                        }}>
+                          {activity.type === 'success' ? <CheckCircleOutlined /> :
+                           activity.type === 'warning' ? <WarningOutlined /> : <ClockCircleOutlined />}
+                        </div>
+                      }
+                      title={
+                        <span style={{ color: 'white', fontWeight: 'bold', fontSize: '16px' }}>
+                          {activity.action}
+                        </span>
+                      }
+                      description={
+                        <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px' }}>
+                          <div style={{ marginBottom: '4px' }}>
+                            <UserOutlined style={{ marginRight: '8px' }} />
+                            {activity.user}
+                          </div>
+                          <div>
+                            <ClockCircleOutlined style={{ marginRight: '8px' }} />
+                            {activity.time}
+                          </div>
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
               />
             </Card>
           </Col>
         </Row>
+
       </div>
 
       {/* CSS анимации */}

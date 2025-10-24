@@ -152,7 +152,7 @@ function LoginPage() {
           </Form.Item>
           
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('login.register')} </span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Нет аккаунта? </span>
             <Link to="/register">
               <span style={{ 
                 color: '#20B2AA', 

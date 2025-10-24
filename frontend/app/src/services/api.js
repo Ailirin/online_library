@@ -4,19 +4,22 @@ const API_BASE_URL = '/api';
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
-    this.token = localStorage.getItem('token');
+    this.token = localStorage.getItem('access') || localStorage.getItem('token');
   }
 
   // Установить токен авторизации
   setToken(token) {
     this.token = token;
-    localStorage.setItem('token', token);
+    localStorage.setItem('access', token);
+    localStorage.setItem('token', token); // Для совместимости
   }
 
   // Удалить токен
   clearToken() {
     this.token = null;
+    localStorage.removeItem('access');
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
     localStorage.removeItem('refresh_token');
   }
 
@@ -146,6 +149,14 @@ class ApiService {
   // Получить профиль текущего пользователя
   async getProfile() {
     return await this.request('/auth/profile/');
+  }
+
+  // Обновить профиль пользователя
+  async updateProfile(profileData) {
+    return await this.request('/auth/profile/', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
   }
 
   // Обновить токен
@@ -300,6 +311,16 @@ class ApiService {
     return await this.request(endpoint);
   }
 
+  // Получить информацию о конкретном пользователе
+  async getUser(userId) {
+    return await this.request(`/users/${userId}/`);
+  }
+
+  // Получить статистику конкретного пользователя
+  async getUserStatsById(userId) {
+    return await this.request(`/users/${userId}/stats/`);
+  }
+
   // Создать пользователя
   async createUser(userData) {
     return await this.request('/users/', {
@@ -381,6 +402,73 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(genreData),
     });
+  }
+
+
+  // === ИЗБРАННОЕ ===
+  
+  // Получить избранные книги
+  async getFavorites() {
+    return await this.request('/user-favorites/');
+  }
+
+  // Добавить/удалить книгу из избранного
+  async toggleFavorite(bookId) {
+    return await this.request('/user-favorites/toggle/', {
+      method: 'POST',
+      body: JSON.stringify({ book_id: bookId }),
+    });
+  }
+
+  // Удалить книгу из избранного по ID записи
+  async removeFromFavorites(favoriteId) {
+    return await this.request(`/user-favorites/${favoriteId}/`, {
+      method: 'DELETE',
+    });
+  }
+
+
+
+
+  // === РЕЙТИНГИ КНИГ ===
+  
+  // Получить мои рейтинги (используем reviews API)
+  async getMyRatings() {
+    return await this.request('/reviews/my_reviews/');
+  }
+
+  // Добавить рейтинг книги (используем reviews API)
+  async addBookRating(bookId, rating, review = '') {
+    return await this.request('/reviews/', {
+      method: 'POST',
+      body: JSON.stringify({
+        book: bookId,
+        rating: rating,
+        comment: review
+      }),
+    });
+  }
+
+  // Обновить рейтинг книги (используем reviews API)
+  async updateBookRating(ratingId, rating, review = '') {
+    return await this.request(`/reviews/${ratingId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        rating: rating,
+        comment: review
+      }),
+    });
+  }
+
+  // === СТАТИСТИКА ===
+  
+  // Получить статистику пользователя
+  async getUserStats() {
+    console.log('Запрашиваем статистику пользователя...');
+    console.log('Токен авторизации:', this.token ? 'есть' : 'нет');
+    const response = await this.request('/user-stats/my_stats/');
+    console.log('Ответ API для статистики:', response);
+    return response;
   }
 }
 
