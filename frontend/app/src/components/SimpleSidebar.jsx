@@ -13,12 +13,14 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const SimpleSidebar = () => {
   const [visible, setVisible] = useState(false);
   const location = useLocation();
   const { state, actions } = useApp();
   const { user, isAuthenticated } = state;
+  const { t } = useTranslation();
 
   const showDrawer = () => {
     setVisible(true);
@@ -32,12 +34,12 @@ const SimpleSidebar = () => {
     {
       key: '/',
       icon: <HomeOutlined />,
-      label: <Link to="/" onClick={onClose}>Главная</Link>,
+      label: <Link to="/" onClick={onClose}>{t('sidebar.home')}</Link>,
     },
     {
       key: '/catalog',
       icon: <BookOutlined />,
-      label: <Link to="/catalog" onClick={onClose}>Каталог книг</Link>,
+      label: <Link to="/catalog" onClick={onClose}>{t('sidebar.books')}</Link>,
     },
   ];
 
@@ -45,23 +47,23 @@ const SimpleSidebar = () => {
     {
       key: '/profile',
       icon: <UserOutlined />,
-      label: <Link to="/profile" onClick={onClose}>Профиль</Link>,
+      label: <Link to="/profile" onClick={onClose}>{t('sidebar.profile')}</Link>,
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: <span onClick={() => { actions.logout(); onClose(); }}>Выйти</span>,
+      label: <span onClick={() => { actions.logout(); onClose(); }}>{t('sidebar.logout')}</span>,
     },
   ] : [
     {
       key: '/login',
       icon: <LoginOutlined />,
-      label: <Link to="/login" onClick={onClose}>Войти</Link>,
+      label: <Link to="/login" onClick={onClose}>{t('sidebar.login')}</Link>,
     },
     {
       key: '/register',
       icon: <UserAddOutlined />,
-      label: <Link to="/register" onClick={onClose}>Регистрация</Link>,
+      label: <Link to="/register" onClick={onClose}>{t('sidebar.register')}</Link>,
     },
   ];
 
@@ -69,7 +71,7 @@ const SimpleSidebar = () => {
     {
       key: '/admin',
       icon: <DashboardOutlined />,
-      label: <Link to="/admin" onClick={onClose}>Админ панель</Link>,
+      label: <Link to="/admin" onClick={onClose}>{t('sidebar.admin')}</Link>,
     },
     {
       key: '/admin/books',
@@ -200,7 +202,7 @@ const SimpleSidebar = () => {
                 borderRadius: '8px',
                 border: '1px solid rgba(64, 224, 208, 0.3)'
               }}>
-                🔧 Администратор
+                🔧 {t('sidebar.adminPanel')}
               </div>
             )}
           </div>

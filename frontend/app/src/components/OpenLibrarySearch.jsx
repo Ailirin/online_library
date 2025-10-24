@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import apiService from '../services/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 function OpenLibrarySearch({ onClose }) {
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -36,13 +38,13 @@ function OpenLibrarySearch({ onClose }) {
           cursor: 'pointer',
         }}
       >
-        ← Вернуться к каталогу
+        ← {t('search.backToCatalog')}
       </button>
-      <h2>Поиск книг на OpenLibrary</h2>
+      <h2>{t('search.title')}</h2>
       <div style={{ marginBottom: 20 }}>
         <input
           type="text"
-          placeholder="Введите название книги"
+          placeholder={t('search.placeholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -68,7 +70,7 @@ function OpenLibrarySearch({ onClose }) {
             fontSize: 16
           }}
         >
-          {loading ? 'Поиск...' : 'Поиск'}
+          {loading ? t('search.searching') : t('search.search')}
         </button>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 24 }}>

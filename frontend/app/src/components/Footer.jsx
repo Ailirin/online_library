@@ -1,6 +1,10 @@
 import React from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 
-const Footer = () => (
+const Footer = () => {
+  const { t } = useTranslation();
+  
+  return (
   <footer style={{
     backgroundColor: '#008080',
     color: 'white',
@@ -17,13 +21,15 @@ const Footer = () => (
       marginBottom: '8px',
       flexWrap: 'wrap'
     }}>
-      <span>Телефон: +375 (29) 456-78-90</span>
-      <span>Email: info@company.com</span>
+      <span>{t('footer.phone')}</span>
+      <span>{t('footer.email')}</span>
+      <span>{t('footer.address')}</span>
     </div>
     <div>
-      &copy; {new Date().getFullYear()} Все права защищены.
+      {t('footer.copyright')}
     </div>
   </footer>
-);
+  );
+};
 
 export default Footer;

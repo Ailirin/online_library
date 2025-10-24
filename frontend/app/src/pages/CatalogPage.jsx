@@ -6,6 +6,7 @@ import apiService from '../services/api';
 import OpenLibrarySearch from '../components/OpenLibrarySearch';
 import BookModal from '../components/BookModal';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -15,6 +16,7 @@ function CatalogPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
   apiService.getBooks()
@@ -62,7 +64,7 @@ function CatalogPage() {
               padding: '0 20px'
             }}
           >
-            На главную
+            {t('common.backToHome')}
           </Button>
         </Space>
 
@@ -86,10 +88,10 @@ function CatalogPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            <BookOutlined /> Каталог библиотеки
+            <BookOutlined /> {t('books.title')}
           </Title>
           <Paragraph style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.2rem' }}>
-            Откройте для себя мир литературы
+            {t('books.subtitle')}
           </Paragraph>
         </div>
 
@@ -119,7 +121,7 @@ function CatalogPage() {
                 boxShadow: '0 8px 24px rgba(0, 128, 128, 0.4)'
               }}
             >
-              Искать в OpenLibrary
+              {t('search.search')} в OpenLibrary
             </Button>
           </Space>
         </Card>

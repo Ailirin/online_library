@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 function LoginPage() {
   const navigate = useNavigate();
   const { actions } = useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
       const { profile } = await actions.login(values.username, values.password);
-      message.success('Вход выполнен успешно!');
+      message.success(t('login.success'));
       const admin = profile?.is_staff || profile?.is_superuser;
       if (admin) {
         // Переходим в серверную админку Django
@@ -21,7 +23,7 @@ function LoginPage() {
         navigate('/catalog');
       }
     } catch (error) {
-      message.error('Неверный логин или пароль');
+      message.error(t('login.error'));
     } finally {
       setLoading(false);
     }
@@ -75,7 +77,7 @@ function LoginPage() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          🔐 Вход в систему
+          🔐 {t('login.title')}
         </h2>
         
         <Form
@@ -85,9 +87,9 @@ function LoginPage() {
           layout="vertical"
         >
           <Form.Item
-            label={<span style={{ color: 'white', fontWeight: '600' }}>Имя пользователя</span>}
+            label={<span style={{ color: 'white', fontWeight: '600' }}>{t('login.username')}</span>}
             name="username"
-            rules={[{ required: true, message: 'Введите имя пользователя!' }]}
+            rules={[{ required: true, message: t('login.username') + '!' }]}
           >
             <Input 
               autoComplete="off" 
@@ -102,14 +104,14 @@ function LoginPage() {
                 height: '45px',
                 fontSize: '16px'
               }}
-              placeholder="Введите имя пользователя"
+              placeholder={t('login.username')}
             />
           </Form.Item>
           
           <Form.Item
-            label={<span style={{ color: 'white', fontWeight: '600' }}>Пароль</span>}
+            label={<span style={{ color: 'white', fontWeight: '600' }}>{t('login.password')}</span>}
             name="password"
-            rules={[{ required: true, message: 'Введите пароль!' }]}
+            rules={[{ required: true, message: t('login.password') + '!' }]}
           >
             <Input.Password 
               autoComplete="off" 
@@ -124,7 +126,7 @@ function LoginPage() {
                 height: '45px',
                 fontSize: '16px'
               }}
-              placeholder="Введите пароль"
+              placeholder={t('login.password')}
             />
           </Form.Item>
           
@@ -145,12 +147,12 @@ function LoginPage() {
                 transition: 'all 0.3s ease'
               }}
             >
-              Войти
+              {t('login.submit')}
             </Button>
           </Form.Item>
           
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Нет аккаунта? </span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{t('login.register')} </span>
             <Link to="/register">
               <span style={{ 
                 color: '#20B2AA', 

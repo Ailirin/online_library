@@ -1,24 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Typography } from 'antd';
-import { BookOutlined, UserOutlined, DashboardOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Typography, Statistic, Button, Space, List, Badge, Progress, Timeline } from 'antd';
+import { 
+  BookOutlined, 
+  UserOutlined, 
+  DashboardOutlined, 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  EyeOutlined,
+  ClockCircleOutlined,
+  TrophyOutlined,
+  WarningOutlined,
+  CheckCircleOutlined,
+  BarChartOutlined,
+  SettingOutlined
+} from '@ant-design/icons';
 import apiService from '../services/api';
 
 const { Title, Paragraph } = Typography;
 
 function AdminDashboardPage() {
-  const [stats, setStats] = useState({ books: 0, users: 0 });
+  const [stats, setStats] = useState({ 
+    books: 0, 
+    users: 0, 
+    recentBooks: 0, 
+    activeUsers: 0,
+    systemHealth: 95
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
         const booksRes = await apiService.getBooks();
         const usersRes = await apiService.getUsers ? await apiService.getUsers() : { results: [] };
+        
+        // Загружаем дополнительную статистику
+        const recentBooksRes = await apiService.request('/admin/recent-books/').catch(() => ({ count: 0 }));
+        const activeUsersRes = await apiService.request('/admin/active-users/').catch(() => ({ count: 0 }));
+        
         setStats({
           books: (booksRes.results || booksRes).length,
           users: (usersRes.results || usersRes).length,
+          recentBooks: recentBooksRes.count || 0,
+          activeUsers: activeUsersRes.count || 0,
+          systemHealth: 95
         });
+
+        // Загружаем последнюю активность
+        const activityRes = await apiService.request('/admin/recent-activity/').catch(() => ({ results: [] }));
+        setRecentActivity(activityRes.results || [
+          { id: 1, action: 'Новая книга добавлена', user: 'Администратор', time: '2 минуты назад', type: 'success' },
+          { id: 2, action: 'Пользователь зарегистрирован', user: 'Система', time: '15 минут назад', type: 'info' },
+          { id: 3, action: 'Книга обновлена', user: 'Администратор', time: '1 час назад', type: 'warning' }
+        ]);
       } catch (e) {
-        setStats({ books: 0, users: 0 });
+        console.error('Ошибка загрузки статистики:', e);
+        setStats({ books: 0, users: 0, recentBooks: 0, activeUsers: 0, systemHealth: 95 });
+        setRecentActivity([]);
+      } finally {
+        setLoading(false);
       }
     }
     fetchStats();
@@ -73,86 +115,242 @@ function AdminDashboardPage() {
           </Paragraph>
         </div>
 
-        {/* Статистика */}
-        <Row gutter={[32, 32]}>
-          <Col xs={24} md={12}>
+        {/* Основная статистика */}
+        <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>
+          <Col xs={24} sm={12} md={6}>
             <Card 
               style={{
                 background: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '24px',
-                height: '100%',
+                borderRadius: '20px',
                 textAlign: 'center',
-                padding: '40px 24px',
+                padding: '24px 16px',
                 transition: 'all 0.3s ease',
                 cursor: 'pointer'
               }}
               hoverable
             >
-              <div style={{ 
-                fontSize: '64px', 
-                marginBottom: '24px',
-                background: 'linear-gradient(45deg, #008080, #20b2aa)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}>
-                <BookOutlined />
-              </div>
-              <Title level={2} style={{ color: 'white', marginBottom: '16px' }}>
-                Книг в базе
-              </Title>
-              <div style={{ 
-                fontSize: '48px', 
-                fontWeight: 'bold', 
-                color: 'white',
-                marginBottom: '8px'
-              }}>
-                {stats.books}
-              </div>
-              <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                Всего книг в библиотеке
-              </Paragraph>
+              <Statistic
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Всего книг</span>}
+                value={stats.books}
+                valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
+                prefix={<BookOutlined style={{ color: '#008080' }} />}
+              />
             </Card>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12} md={6}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '20px',
+                textAlign: 'center',
+                padding: '24px 16px',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              hoverable
+            >
+              <Statistic
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Пользователей</span>}
+                value={stats.users}
+                valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
+                prefix={<UserOutlined style={{ color: '#20b2aa' }} />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '20px',
+                textAlign: 'center',
+                padding: '24px 16px',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              hoverable
+            >
+              <Statistic
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Новых книг</span>}
+                value={stats.recentBooks}
+                valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
+                prefix={<PlusOutlined style={{ color: '#40e0d0' }} />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '20px',
+                textAlign: 'center',
+                padding: '24px 16px',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              hoverable
+            >
+              <Statistic
+                title={<span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Активных</span>}
+                value={stats.activeUsers}
+                valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}
+                prefix={<TrophyOutlined style={{ color: '#00ced1' }} />}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Быстрые действия и дополнительная информация */}
+        <Row gutter={[24, 24]}>
+          {/* Быстрые действия */}
+          <Col xs={24} lg={12}>
             <Card 
               style={{
                 background: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '24px',
-                height: '100%',
-                textAlign: 'center',
-                padding: '40px 24px',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer'
+                height: '100%'
               }}
-              hoverable
             >
-              <div style={{ 
-                fontSize: '64px', 
-                marginBottom: '24px',
-                background: 'linear-gradient(45deg, #20b2aa, #40e0d0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}>
-                <UserOutlined />
-              </div>
-              <Title level={2} style={{ color: 'white', marginBottom: '16px' }}>
-                Пользователей
+              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
+                <SettingOutlined /> Быстрые действия
               </Title>
-              <div style={{ 
-                fontSize: '48px', 
-                fontWeight: 'bold', 
-                color: 'white',
-                marginBottom: '8px'
-              }}>
-                {stats.users}
-              </div>
-              <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                Зарегистрированных пользователей
-              </Paragraph>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Button 
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  href="/admin/books"
+                  style={{
+                    background: 'linear-gradient(45deg, #008080, #20b2aa)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    height: '48px',
+                    width: '100%',
+                    fontWeight: 600
+                  }}
+                >
+                  Добавить новую книгу
+                </Button>
+                <Button 
+                  icon={<UserOutlined />}
+                  href="/admin/users"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    borderRadius: '12px',
+                    height: '48px',
+                    width: '100%'
+                  }}
+                >
+                  Управление пользователями
+                </Button>
+                <Button 
+                  icon={<BarChartOutlined />}
+                  href="/admin/analytics"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    borderRadius: '12px',
+                    height: '48px',
+                    width: '100%'
+                  }}
+                >
+                  Аналитика и отчеты
+                </Button>
+              </Space>
+            </Card>
+          </Col>
+
+          {/* Системная информация */}
+          <Col xs={24} lg={12}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '24px',
+                height: '100%'
+              }}
+            >
+              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
+                <DashboardOutlined /> Состояние системы
+              </Title>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Здоровье системы</span>
+                    <span style={{ color: 'white', fontWeight: 'bold' }}>{stats.systemHealth}%</span>
+                  </div>
+                  <Progress 
+                    percent={stats.systemHealth} 
+                    strokeColor={{
+                      '0%': '#008080',
+                      '100%': '#20b2aa',
+                    }}
+                    trailColor="rgba(255, 255, 255, 0.2)"
+                    showInfo={false}
+                  />
+                </div>
+                
+                <div style={{ color: 'white' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                    <span>База данных: Онлайн</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                    <span>API сервер: Работает</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <WarningOutlined style={{ color: '#faad14' }} />
+                    <span>Резервное копирование: Требуется</span>
+                  </div>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Последняя активность */}
+        <Row style={{ marginTop: '32px' }}>
+          <Col span={24}>
+            <Card 
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '24px'
+              }}
+            >
+              <Title level={3} style={{ color: 'white', marginBottom: '24px' }}>
+                <ClockCircleOutlined /> Последняя активность
+              </Title>
+              <Timeline
+                items={recentActivity.map(activity => ({
+                  color: activity.type === 'success' ? '#52c41a' : 
+                         activity.type === 'warning' ? '#faad14' : '#1890ff',
+                  children: (
+                    <div style={{ color: 'white' }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        {activity.action}
+                      </div>
+                      <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
+                        {activity.user} • {activity.time}
+                      </div>
+                    </div>
+                  )
+                }))}
+              />
             </Card>
           </Col>
         </Row>

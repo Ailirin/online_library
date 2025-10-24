@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import { Form, Input, Button, App } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 function RegisterPage() {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { actions } = useApp();
+  const { t } = useTranslation();
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
       await actions.register(values);
-      message.success('Регистрация прошла успешно!');
+      message.success(t('register.success'));
       navigate('/login');
     } catch (error) {
-      message.error(error.message || 'Ошибка регистрации');
+      message.error(error.message || t('register.error'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ function RegisterPage() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          📝 Регистрация
+          📝 {t('register.title')}
         </h2>
         
         <Form
@@ -80,9 +82,9 @@ function RegisterPage() {
           autoComplete="on"
         >
           <Form.Item
-            label={<span style={{ color: 'white', fontWeight: '600' }}>Имя пользователя</span>}
+            label={<span style={{ color: 'white', fontWeight: '600' }}>{t('register.username')}</span>}
             name="username"
-            rules={[{ required: true, message: 'Введите имя пользователя!' }]}
+            rules={[{ required: true, message: t('register.username') + '!' }]}
           >
             <Input 
               autoComplete="username"
@@ -94,16 +96,16 @@ function RegisterPage() {
                 height: '45px',
                 fontSize: '16px'
               }}
-              placeholder="Введите имя пользователя"
+              placeholder={t('register.username')}
             />
           </Form.Item>
           
           <Form.Item
-            label={<span style={{ color: 'white', fontWeight: '600' }}>Email</span>}
+            label={<span style={{ color: 'white', fontWeight: '600' }}>{t('register.email')}</span>}
             name="email"
             rules={[
-              { type: 'email', message: 'Некорректный email!' },
-              { required: true, message: 'Введите email!' }
+              { type: 'email', message: t('register.email') + '!' },
+              { required: true, message: t('register.email') + '!' }
             ]}
           >
             <Input 
@@ -116,14 +118,14 @@ function RegisterPage() {
                 height: '45px',
                 fontSize: '16px'
               }}
-              placeholder="Введите email"
+              placeholder={t('register.email')}
             />
           </Form.Item>
           
           <Form.Item
-            label={<span style={{ color: 'white', fontWeight: '600' }}>Пароль</span>}
+            label={<span style={{ color: 'white', fontWeight: '600' }}>{t('register.password')}</span>}
             name="password"
-            rules={[{ required: true, message: 'Введите пароль!' }]}
+            rules={[{ required: true, message: t('register.password') + '!' }]}
           >
             <Input.Password 
               autoComplete="new-password"
@@ -135,7 +137,7 @@ function RegisterPage() {
                 height: '45px',
                 fontSize: '16px'
               }}
-              placeholder="Введите пароль"
+              placeholder={t('register.password')}
             />
           </Form.Item>
           
@@ -156,7 +158,7 @@ function RegisterPage() {
                 transition: 'all 0.3s ease'
               }}
             >
-              Зарегистрироваться
+              {t('register.submit')}
             </Button>
           </Form.Item>
         </Form>

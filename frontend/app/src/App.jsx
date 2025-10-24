@@ -2,9 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider, App as AntdApp } from 'antd'; // Импортируем App как AntdApp
 import { AppProvider } from './context/AppContext';
+import { TranslationProvider } from './hooks/useTranslation';
 import Header from './components/Header';
 import SimpleSidebar from './components/SimpleSidebar';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import BooksPage from './pages/BooksPage';
 import BookDetail from './pages/BookDetail';
@@ -16,6 +18,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
+import TestPage from './pages/TestPage';
 import './App.css';
 
 // Тема Ant Design
@@ -32,10 +35,11 @@ const theme = {
 
 function App() {
   return (
-    <AppProvider>
-      <ConfigProvider theme={theme}>
-        <AntdApp>
-          <Router>
+    <TranslationProvider>
+      <AppProvider>
+        <ConfigProvider theme={theme}>
+          <AntdApp>
+            <Router>
             <div className="App" style={{ width: '100%', minHeight: '100vh' }}>
               <Header />
               <SimpleSidebar />
@@ -48,15 +52,36 @@ function App() {
                   <Route path="/catalog" element={<CatalogPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/test" element={<TestPage />} />
 
                   {/* Защищенные маршруты */}
-                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Админ маршруты */}
-                  <Route path="/admin" element={<AdminDashboardPage />} />
-                  <Route path="/admin/books" element={<AdminBooksPage />} />
-                  <Route path="/admin/users" element={<AdminUsersPage />} />
-                  <Route path="/admin/settings" element={<AdminSettingsPage />} />
+                  <Route path="/admin" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminDashboardPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/books" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminBooksPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminUsersPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/settings" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminSettingsPage />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </main>
               <Footer />
@@ -65,6 +90,7 @@ function App() {
         </AntdApp>
       </ConfigProvider>
     </AppProvider>
+    </TranslationProvider>
   );
 }
 

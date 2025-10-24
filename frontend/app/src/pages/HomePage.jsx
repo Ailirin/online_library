@@ -1,10 +1,13 @@
 import React from 'react';
 import { Card, Row, Col, Typography } from 'antd';
 import { BookOutlined, SearchOutlined, StarOutlined } from '@ant-design/icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { Title, Paragraph } = Typography;
 
 const HomePage = () => {
+  const { t } = useTranslation();
+  
   return (
     <div style={{ 
         minHeight: '100vh',
@@ -53,7 +56,7 @@ const HomePage = () => {
             WebkitTextFillColor: 'transparent',
             textShadow: '0 4px 20px rgba(0,0,0,0.3)'
           }}>
-            Онлайн Библиотека
+            {t('home.welcome')}
           </Title>
           <Paragraph style={{ 
             color: 'rgba(255, 255, 255, 0.9)', 
@@ -63,8 +66,7 @@ const HomePage = () => {
             margin: '0 auto 40px',
             lineHeight: 1.6
           }}>
-            Откройте мир знаний с нашей современной цифровой библиотекой. 
-            Читайте, изучайте и делитесь любимыми произведениями.
+            {t('home.subtitle')}
           </Paragraph>
         </div>
 
@@ -95,10 +97,10 @@ const HomePage = () => {
                 <BookOutlined />
               </div>
               <Title level={3} style={{ color: 'white', marginBottom: '16px' }}>
-                Обширная коллекция
+                {t('home.search')}
               </Title>
               <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                Тысячи книг различных жанров и авторов для всех возрастов и интересов
+                {t('home.search.desc')}
               </Paragraph>
             </Card>
           </Col>
@@ -127,10 +129,10 @@ const HomePage = () => {
                 <SearchOutlined />
               </div>
               <Title level={3} style={{ color: 'white', marginBottom: '16px' }}>
-                Умный поиск
+                {t('home.favorites')}
               </Title>
               <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                Быстрый и точный поиск по названию, автору, жанру и содержимому
+                {t('home.favorites.desc')}
               </Paragraph>
             </Card>
           </Col>
@@ -159,10 +161,10 @@ const HomePage = () => {
                 <StarOutlined />
               </div>
               <Title level={3} style={{ color: 'white', marginBottom: '16px' }}>
-                Персонализация
+                {t('home.recommendations')}
               </Title>
               <Paragraph style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
-                Рекомендации на основе ваших предпочтений и истории чтения
+                {t('home.recommendations.desc')}
               </Paragraph>
             </Card>
           </Col>
